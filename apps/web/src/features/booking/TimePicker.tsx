@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
@@ -43,6 +43,13 @@ export function TimePicker(p: Props) {
     queryFn: () => getAvailableSlots({ locationId: p.locationId, serviceId: p.serviceId, dentistId: p.dentistId, date: p.date! }),
     enabled: !!p.date,
   });
+
+  // Open on the first day that has free times, so patients see times straight away.
+  const firstFree = days.data?.find((d) => d.slot_count > 0)?.day.slice(0, 10);
+  const { onDate } = p;
+  useEffect(() => {
+    if (!p.date && firstFree) onDate(firstFree);
+  }, [p.date, firstFree, onDate]);
 
   const groups = useMemo(() => {
     const opts = groupSlots(slots.data ?? []).filter((o) => o.startsAt !== p.excludeStart);

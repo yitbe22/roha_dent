@@ -87,7 +87,8 @@
       "afternoon": "Afternoon",
       "evening": "Evening",
       "dayFull": "Full",
-      "times": "{{count}} times"
+      "times": "{{count}} times",
+      "dentist": "Dentist"
     },
     "details": {
       "title": "Your details",
@@ -101,7 +102,8 @@
       "submitting": "Booking…",
       "summary": "Your appointment",
       "payNote": "No payment now. You pay at the clinic after your visit.",
-      "captcha": "Security check"
+      "captcha": "Security check",
+      "check": "Please check your appointment"
     },
     "errors": {
       "nameRequired": "Enter your full name (at least 2 letters).",
@@ -118,7 +120,8 @@
       "NETWORK": "No connection. Check your internet and try again.",
       "generic": "Booking failed. Please try again, or call the clinic.",
       "loadFailed": "Could not load booking options. Check your connection and try again.",
-      "retry": "Try again"
+      "retry": "Try again",
+      "nameInvalid": "Please write your name only, without numbers or web links."
     },
     "done": {
       "pendingTitle": "Request received",
@@ -129,7 +132,13 @@
       "manageHint": "Keep this link. It is also in your SMS.",
       "another": "Book another appointment"
     },
-    "notConfigured": "Online booking is not available right now. Please call or message the clinic."
+    "notConfigured": "Online booking is not available right now. Please call or message the clinic.",
+    "choose": {
+      "title": "What would you like to book?",
+      "clinic": "1. Choose a clinic",
+      "treatment": "2. Choose a treatment",
+      "pickClinic": "Choose a clinic to see its treatments."
+    }
   },
   "manage": {
     "title": "Your appointment",

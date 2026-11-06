@@ -13,9 +13,21 @@ export async function verifyTurnstile(token: string, ip: string): Promise<boolea
   if (ip && ip !== 'unknown') form.append('remoteip', ip);
   try {
     const res = await fetch(VERIFY_URL, { method: 'POST', body: form, signal: AbortSignal.timeout(8000) });
-    const body = (await res.json()) as { success?: boolean; 'error-codes'?: string[] };
-    if (!body.success) console.warn('turnstile rejected', body['error-codes']);
-    return body.success === true;
+    const body = (await res.json()) as { success?: boolean; hostname?: string; 'error-codes'?: string[] };
+    if (!body.success) {
+      console.warn('turnstile rejected', body['error-codes']);
+      return false;
+    }
+    // The check must have been solved on our own website (the widget key is public, so another
+    // site could embed it). Hosts come from ALLOWED_ORIGINS; the test key reports "example.com".
+    const hosts = (Deno.env.get('ALLOWED_ORIGINS') ?? '').split(',').map((o) => {
+      try { return new URL(o.trim()).hostname; } catch { return ''; }
+    }).filter(Boolean);
+    if (body.hostname && hosts.length && !hosts.includes(body.hostname) && body.hostname !== 'example.com') {
+      console.warn('turnstile solved on another host', body.hostname);
+      return false;
+    }
+    return true;
   } catch (e) {
     console.error('turnstile verify failed', e);
     return false;

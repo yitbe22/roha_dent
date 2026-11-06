@@ -1,5 +1,5 @@
 // POST /functions/v1/manage-booking   { action: 'get' | 'cancel' | 'reschedule', token, ... }
-// Public endpoint (verify_jwt = false). The 256-bit token in the patient's link is the credential.
+// Public endpoint (verify_jwt = false). The 128-bit token in the patient's link is the credential.
 import { manageRequestSchema } from '../_shared/schemas.ts';
 import { clientIp, dbError, fail, json, preflight, readJson } from '../_shared/http.ts';
 import { admin, allow } from '../_shared/db.ts';

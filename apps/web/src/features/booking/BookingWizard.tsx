@@ -6,13 +6,15 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useTranslation } from 'react-i18next';
 import { normalizeEthiopianPhone, formatEthiopianPhone } from '@shared/phone.ts';
-import { formatClinicDate, formatClinicTime, type TimeOption } from '@shared/time.ts';
+import { isAllowedName } from '@shared/schemas.ts';
+import { ethiopianTime, formatClinicDate, formatClinicTime, type TimeOption } from '@shared/time.ts';
 import { ApiError, createBooking, getCatalog, type BookingResult, type Catalog } from '../../lib/api';
 import { Icon } from '../../components/Icon';
 import { TimePicker, ErrorLine } from './TimePicker';
 import { Turnstile } from './Turnstile';
 
-const STEPS = ['location', 'service', 'dentist', 'time', 'details'] as const;
+// Three steps: what & where → when (with an optional dentist filter) → who.
+const STEPS = ['choose', 'time', 'details'] as const;
 type Step = (typeof STEPS)[number] | 'done';
 
 type Draft = {
@@ -24,7 +26,7 @@ type Draft = {
 };
 
 const detailsSchema = z.object({
-  fullName: z.string().trim().min(2, 'nameRequired').max(100, 'nameRequired'),
+  fullName: z.string().trim().min(2, 'nameRequired').max(100, 'nameRequired').refine(isAllowedName, 'nameInvalid'),
   phone: z
     .string()
     .trim()
@@ -47,19 +49,20 @@ const dentistsFor = (c: Catalog, locationId?: string, serviceId?: string) =>
   );
 
 export default function BookingWizard() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const localLang = i18n.language?.startsWith('am') ? 'am' : 'en';
   const [params] = useSearchParams();
   const qc = useQueryClient();
   const catalog = useQuery({ queryKey: ['catalog'], queryFn: getCatalog, staleTime: 5 * 60_000 });
 
   const [draft, setDraft] = useState<Draft>({ dentistId: 'any' });
-  const [step, setStep] = useState<Step>('location');
+  const [step, setStep] = useState<Step>('choose');
   const [ready, setReady] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [result, setResult] = useState<{ res: BookingResult; phone: string } | null>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
 
-  // Pre-select from ?location=&service=&dentist= (slugs), then jump to the first open step.
+  // Pre-select from ?location=&service=&dentist= (slugs); a single clinic is chosen automatically.
   useEffect(() => {
     const c = catalog.data;
     if (!c || ready) return;
@@ -67,11 +70,11 @@ export default function BookingWizard() {
     const svc = c.services.find((s) => s.slug === params.get('service'));
     const den = c.dentists.find((d) => d.slug === params.get('dentist'));
     const next: Draft = { dentistId: 'any' };
-    next.locationId = loc?.id ?? (den?.location_ids.length === 1 ? den.location_ids[0] : undefined);
+    next.locationId = loc?.id ?? (den?.location_ids.length === 1 ? den.location_ids[0] : c.locations.length === 1 ? c.locations[0].id : undefined);
     if (svc && (!next.locationId || dentistsFor(c, next.locationId, svc.id).length)) next.serviceId = svc.id;
     if (den && (!next.locationId || den.location_ids.includes(next.locationId))) next.dentistId = den.id;
     setDraft(next);
-    setStep(!next.locationId ? 'location' : !next.serviceId ? 'service' : den ? 'time' : 'dentist');
+    setStep(next.locationId && next.serviceId ? 'time' : 'choose');
     setReady(true);
   }, [catalog.data, params, ready]);
 
@@ -95,6 +98,8 @@ export default function BookingWizard() {
     () => (c ? dentistsFor(c, draft.locationId, draft.serviceId) : []),
     [c, draft.locationId, draft.serviceId],
   );
+  const when = (slot: TimeOption) =>
+    `${formatClinicDate(slot.startsAt, 'en-GB', false)}, ${formatClinicTime(slot.startsAt)} (${ethiopianTime(slot.startsAt, localLang)})`;
 
   // ---- details form --------------------------------------------------------
   const form = useForm<Details>({ resolver: zodResolver(detailsSchema), defaultValues: { fullName: '', phone: '', notes: '' } });
@@ -118,6 +123,10 @@ export default function BookingWizard() {
         setDraft((d) => ({ ...d, slot: undefined }));
         setNotice(t('booking.errors.SLOT_UNAVAILABLE'));
         goto('time');
+        return;
+      }
+      if (code === 'INVALID_NAME' || (code === 'VALIDATION' && JSON.stringify((e as ApiError).details ?? '').includes('fullName'))) {
+        form.setError('fullName', { message: 'nameInvalid' });
         return;
       }
       const known = ['TOO_MANY_ACTIVE_BOOKINGS', 'RATE_LIMITED', 'TURNSTILE_FAILED', 'INVALID_PHONE', 'UNSUPPORTED_NETWORK', 'NETWORK'];
@@ -155,6 +164,7 @@ export default function BookingWizard() {
   if (step === 'done' && result) {
     const confirmed = result.res.appointment.status === 'confirmed';
     const bookedDentist = c.dentists.find((d) => d.id === result.res.appointment.dentistId);
+    const at = result.res.appointment.startsAt;
     return (
       <section aria-labelledby="done-h" className="max-w-2xl">
         <span className="step-cross flex size-14 items-center justify-center bg-roha-700 text-adey" aria-hidden="true">
@@ -168,7 +178,8 @@ export default function BookingWizard() {
         </p>
         <dl className="step-corner mt-8 grid gap-4 bg-white p-6 ring-1 ring-line sm:grid-cols-2">
           <Fact label={t('booking.steps.time')}>
-            {formatClinicDate(result.res.appointment.startsAt)}, {formatClinicTime(result.res.appointment.startsAt)}
+            {formatClinicDate(at)}, {formatClinicTime(at)}
+            <span className="block text-sm font-medium text-ink-soft">{ethiopianTime(at, localLang)}</span>
           </Fact>
           <Fact label={t('booking.steps.location')}>{location?.city}</Fact>
           <Fact label={t('booking.steps.service')}>{service?.name}</Fact>
@@ -176,7 +187,7 @@ export default function BookingWizard() {
         </dl>
         <p className="mt-4 text-sm text-ink-soft">{t('booking.details.payNote')}</p>
         <div className="mt-8 flex flex-wrap items-center gap-3">
-          <Link to={`/booking/${result.res.manageToken}`} className="btn-primary">{t('booking.done.manage')}</Link>
+          <Link to={`/b/${result.res.manageToken}`} className="btn-primary">{t('booking.done.manage')}</Link>
           <button type="button" className="btn-ghost" onClick={() => window.location.assign('/book')}>
             {t('booking.done.another')}
           </button>
@@ -187,11 +198,10 @@ export default function BookingWizard() {
   }
 
   const stepIndex = STEPS.indexOf(step as (typeof STEPS)[number]);
-  const done = (s: (typeof STEPS)[number]) => STEPS.indexOf(s) < stepIndex;
 
   return (
     <div className="grid gap-10 lg:grid-cols-[1fr_20rem]">
-      <div>
+      <div className="min-w-0">
         <p className="text-sm font-semibold text-roha-600">{t('booking.stepOf', { step: stepIndex + 1, total: STEPS.length })}</p>
         <div className="mt-2 flex gap-1.5" aria-hidden="true">
           {STEPS.map((s, i) => (
@@ -203,87 +213,104 @@ export default function BookingWizard() {
           <p role="alert" className="mt-6 rounded-lg border border-adey bg-adey-soft px-4 py-3 font-medium text-roha-900">{notice}</p>
         )}
 
-        {step === 'location' && (
-          <StepShell title={t('booking.location.title')} headingRef={headingRef}>
-            <Choices
-              items={c.locations.map((l) => ({ id: l.id, title: l.city, body: l.phone }))}
-              selected={draft.locationId}
-              onSelect={(id) => {
-                const keepService = draft.serviceId && dentistsFor(c, id, draft.serviceId).length;
-                setDraft({ locationId: id, serviceId: keepService ? draft.serviceId : undefined, dentistId: 'any' });
-                goto(keepService ? 'dentist' : 'service');
-              }}
-            />
-          </StepShell>
-        )}
-
-        {step === 'service' && (
-          <StepShell title={t('booking.service.title')} headingRef={headingRef} hint={t('booking.service.hint')}
-            onBack={() => goto('location')}>
-            <Choices
-              items={servicesHere.map((s) => ({
-                id: s.id, title: s.name, body: s.summary ?? '', meta: t('common.minutes', { count: s.duration_minutes }),
-              }))}
-              selected={draft.serviceId}
-              onSelect={(id) => {
-                setDraft((d) => ({ ...d, serviceId: id, dentistId: 'any', date: undefined, slot: undefined }));
-                goto('dentist');
-              }}
-            />
-          </StepShell>
-        )}
-
-        {step === 'dentist' && (
-          <StepShell title={t('booking.dentist.title')} headingRef={headingRef} onBack={() => goto('service')}>
-            {dentistsHere.length === 0 ? (
-              <p className="text-ink-soft">{t('booking.dentist.none')}</p>
+        {step === 'choose' && (
+          <StepShell title={t('booking.choose.title')} headingRef={headingRef}>
+            {c.locations.length > 1 && (
+              <>
+                <h3 className="mb-3 text-lg font-bold text-roha-900">{t('booking.choose.clinic')}</h3>
+                <Choices
+                  items={c.locations.map((l) => ({ id: l.id, title: l.city, body: l.phone }))}
+                  selected={draft.locationId}
+                  onSelect={(id) => {
+                    const keepService = draft.serviceId && dentistsFor(c, id, draft.serviceId).length;
+                    setDraft({ locationId: id, serviceId: keepService ? draft.serviceId : undefined, dentistId: 'any' });
+                  }}
+                />
+              </>
+            )}
+            <h3 className={`mb-1 text-lg font-bold text-roha-900 ${c.locations.length > 1 ? 'mt-8' : ''}`}>{t('booking.choose.treatment')}</h3>
+            {!draft.locationId ? (
+              <p className="text-ink-soft">{t('booking.choose.pickClinic')}</p>
             ) : (
-              <Choices
-                items={[
-                  { id: 'any', title: t('booking.dentist.any'), body: t('booking.dentist.anyHint') },
-                  ...dentistsHere.map((d) => ({ id: d.id, title: d.full_name, body: d.title ?? '' })),
-                ]}
-                selected={draft.dentistId}
-                onSelect={(id) => {
-                  setDraft((d) => ({ ...d, dentistId: id, date: undefined, slot: undefined }));
-                  goto('time');
-                }}
-              />
+              <>
+                <p className="mb-3 text-ink-soft">{t('booking.service.hint')}</p>
+                <Choices
+                  items={servicesHere.map((s) => ({
+                    id: s.id, title: s.name, body: s.summary ?? '', meta: t('common.minutes', { count: s.duration_minutes }),
+                  }))}
+                  selected={draft.serviceId}
+                  onSelect={(id) => {
+                    setDraft((d) => ({ ...d, serviceId: id, dentistId: 'any', date: undefined, slot: undefined }));
+                    goto('time');
+                  }}
+                />
+              </>
             )}
           </StepShell>
         )}
 
         {step === 'time' && draft.locationId && draft.serviceId && (
-          <StepShell title={t('booking.time.title')} headingRef={headingRef} onBack={() => goto('dentist')}>
-            <TimePicker
-              locationId={draft.locationId}
-              serviceId={draft.serviceId}
-              dentistId={draft.dentistId === 'any' ? null : draft.dentistId}
-              maxAdvanceDays={c.settings.max_advance_days}
-              clinicPhone={location?.phone ?? ''}
-              date={draft.date}
-              onDate={(date) => setDraft((d) => ({ ...d, date, slot: undefined }))}
-              value={draft.slot}
-              onChange={(slot) => {
-                setNotice(null);
-                setDraft((d) => ({ ...d, slot }));
-                goto('details');
-              }}
-            />
+          <StepShell title={t('booking.time.title')} headingRef={headingRef} onBack={() => goto('choose')}>
+            {dentistsHere.length === 0 ? (
+              <p className="text-ink-soft">{t('booking.dentist.none')}</p>
+            ) : (
+              <>
+                {dentistsHere.length > 1 && (
+                  <label className="mb-6 flex flex-wrap items-center gap-3">
+                    <span className="font-semibold text-roha-900">{t('booking.time.dentist')}</span>
+                    <select className="input w-auto min-w-64 py-2.5" value={draft.dentistId}
+                      onChange={(e) => setDraft((d) => ({ ...d, dentistId: e.target.value, date: undefined, slot: undefined }))}>
+                      <option value="any">{t('booking.dentist.any')} — {t('booking.dentist.anyHint').toLowerCase()}</option>
+                      {dentistsHere.map((d) => <option key={d.id} value={d.id}>{d.full_name}{d.title ? ` · ${d.title}` : ''}</option>)}
+                    </select>
+                  </label>
+                )}
+                <TimePicker
+                  key={draft.dentistId}
+                  locationId={draft.locationId}
+                  serviceId={draft.serviceId}
+                  dentistId={draft.dentistId === 'any' ? null : draft.dentistId}
+                  maxAdvanceDays={c.settings.max_advance_days}
+                  clinicPhone={location?.phone ?? ''}
+                  date={draft.date}
+                  onDate={(date) => setDraft((d) => ({ ...d, date, slot: undefined }))}
+                  value={draft.slot}
+                  onChange={(slot) => {
+                    setNotice(null);
+                    setDraft((d) => ({ ...d, slot }));
+                    goto('details');
+                  }}
+                />
+              </>
+            )}
           </StepShell>
         )}
 
-        {step === 'details' && (
+        {step === 'details' && draft.slot && (
           <StepShell title={t('booking.details.title')} headingRef={headingRef} onBack={() => goto('time')}>
+            {/* What they are booking — always above the button, also on phones */}
+            <div className="step-corner mb-8 max-w-xl bg-mist p-5">
+              <p className="text-sm font-semibold text-ink-soft">{t('booking.details.check')}</p>
+              <p className="mt-1 text-lg font-bold text-roha-900">{when(draft.slot)}</p>
+              <p className="text-roha-900">
+                {service?.name} · {location?.city} · {draft.dentistId === 'any' ? t('booking.dentist.any') : dentist?.full_name}
+              </p>
+              <button type="button" onClick={() => goto('time')} className="mt-2 text-sm font-semibold text-roha-600 hover:underline">
+                {t('booking.change')}
+              </button>
+            </div>
+
             <form onSubmit={onSubmit} noValidate className="max-w-xl space-y-5">
               <Field id="fullName" label={t('booking.details.name')} hint={t('booking.details.nameHint')}
                 error={form.formState.errors.fullName?.message && t(`booking.errors.${form.formState.errors.fullName.message}`)}>
-                <input id="fullName" autoComplete="name" className="input" aria-invalid={!!form.formState.errors.fullName} aria-describedby={`fullName-hint${form.formState.errors.fullName ? " fullName-error" : ""}`} {...form.register('fullName')} />
+                <input id="fullName" autoComplete="name" maxLength={100} className="input" aria-invalid={!!form.formState.errors.fullName}
+                  aria-describedby={`fullName-hint${form.formState.errors.fullName ? ' fullName-error' : ''}`} {...form.register('fullName')} />
               </Field>
               <Field id="phone" label={t('booking.details.phone')} hint={t('booking.details.phoneHint')}
                 error={form.formState.errors.phone?.message && t(`booking.errors.${form.formState.errors.phone.message}`)}>
-                <input id="phone" type="tel" aria-invalid={!!form.formState.errors.phone} aria-describedby={`phone-hint${form.formState.errors.phone ? " phone-error" : ""}`} inputMode="tel" autoComplete="tel" placeholder="0911 234 567"
-                  className="input tabular-nums" {...form.register('phone')} />
+                <input id="phone" type="tel" inputMode="tel" autoComplete="tel" placeholder="0911 234 567" maxLength={20}
+                  className="input tabular-nums" aria-invalid={!!form.formState.errors.phone}
+                  aria-describedby={`phone-hint${form.formState.errors.phone ? ' phone-error' : ''}`} {...form.register('phone')} />
               </Field>
               <Field id="notes" label={t('booking.details.notes')} hint={t('booking.details.notesHint')}>
                 <textarea id="notes" aria-describedby="notes-hint" rows={3} maxLength={500} className="input" {...form.register('notes')} />
@@ -311,21 +338,18 @@ export default function BookingWizard() {
         )}
       </div>
 
-      {/* Summary of choices so far */}
-      <aside className="lg:sticky lg:top-28 lg:self-start">
+      {/* Running summary (desktop only — on phones the details step shows it above the form) */}
+      <aside className="hidden lg:sticky lg:top-28 lg:block lg:self-start">
         <div className="step-corner bg-mist p-5">
           <h2 className="font-bold text-roha-900">{t('booking.details.summary')}</h2>
           <dl className="mt-3 divide-y divide-roha-200">
-            <SummaryRow label={t('booking.steps.location')} value={location?.city} show={done('location')}
-              onChange={() => goto('location')} />
-            <SummaryRow label={t('booking.steps.service')} value={service?.name} show={done('service')}
-              onChange={() => goto('service')} />
+            <SummaryRow label={t('booking.steps.location')} value={location?.city} onChange={() => goto('choose')} />
+            <SummaryRow label={t('booking.steps.service')} value={step !== 'choose' ? service?.name : undefined} onChange={() => goto('choose')} />
             <SummaryRow label={t('booking.steps.dentist')}
-              value={draft.dentistId === 'any' ? t('booking.dentist.any') : dentist?.full_name}
-              show={done('dentist')} onChange={() => goto('dentist')} />
-            <SummaryRow label={t('booking.steps.time')}
-              value={draft.slot && `${formatClinicDate(draft.slot.startsAt, 'en-GB', false)}, ${formatClinicTime(draft.slot.startsAt)}`}
-              show={done('time')} onChange={() => goto('time')} />
+              value={step !== 'choose' ? (draft.dentistId === 'any' ? t('booking.dentist.any') : dentist?.full_name) : undefined}
+              onChange={() => goto('time')} />
+            <SummaryRow label={t('booking.steps.time')} value={draft.slot && step === 'details' ? when(draft.slot) : undefined}
+              onChange={() => goto('time')} />
           </dl>
         </div>
       </aside>
@@ -336,7 +360,7 @@ export default function BookingWizard() {
 // ---- small pieces ------------------------------------------------------------
 
 function StepShell(props: {
-  title: string; hint?: string; children: React.ReactNode; onBack?: () => void;
+  title: string; children: React.ReactNode; onBack?: () => void;
   headingRef: React.RefObject<HTMLHeadingElement | null>;
 }) {
   const { t } = useTranslation();
@@ -348,7 +372,6 @@ function StepShell(props: {
         </button>
       )}
       <h2 ref={props.headingRef} tabIndex={-1} className="text-h2 outline-none">{props.title}</h2>
-      {props.hint && <p className="mt-2 text-ink-soft">{props.hint}</p>}
       <div className="mt-6">{props.children}</div>
     </section>
   );
@@ -399,15 +422,15 @@ function Field({ id, label, hint, error, children }: {
   );
 }
 
-function SummaryRow({ label, value, show, onChange }: { label: string; value?: string; show: boolean; onChange: () => void }) {
+function SummaryRow({ label, value, onChange }: { label: string; value?: string; onChange: () => void }) {
   const { t } = useTranslation();
   return (
     <div className="flex items-start justify-between gap-3 py-2.5">
       <div>
         <dt className="text-xs font-semibold text-ink-soft">{label}</dt>
-        <dd className={show && value ? 'font-semibold text-roha-900' : 'text-ink-soft/70'}>{show && value ? value : '—'}</dd>
+        <dd className={value ? 'font-semibold text-roha-900' : 'text-ink-soft/70'}>{value ?? '—'}</dd>
       </div>
-      {show && value && (
+      {value && (
         <button type="button" onClick={onChange} className="text-sm font-semibold text-roha-600 hover:underline">
           {t('booking.change')}
         </button>
