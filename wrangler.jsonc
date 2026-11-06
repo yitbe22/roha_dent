@@ -3,6 +3,8 @@
 {
   "name": "roha-dent",
   "compatibility_date": "2026-11-01",
+  "workers_dev": true,   // https://roha-dent.yitbarektesfaye22.workers.dev until rohadent.com is connected
+  "preview_urls": false, // one address only (it must be in ALLOWED_ORIGINS and the Turnstile hostnames)
   "assets": {
     "directory": "./apps/web/dist/client",
     // /about → about.html (prerendered pages), unknown paths → 404.html
