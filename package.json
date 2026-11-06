@@ -18,7 +18,8 @@
     "db:push": "supabase db push",
     "dev:api": "node scripts/dev-api.mjs",
     "test": "npm run db:verify && npm run test:functions && npm run test -w @roha/web",
-    "test:functions": "cd supabase/functions/_tests && deno test --allow-env"
+    "test:functions": "cd supabase/functions/_tests && deno test --allow-env",
+    "deploy:web": "npm run build && cd apps/web && npx --yes wrangler@4 pages deploy --branch main"
   },
   "engines": {
     "node": ">=20"
