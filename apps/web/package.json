@@ -5,7 +5,6 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build --outDir dist/client && vite build --ssr src/entry-server.tsx --outDir dist/server && node scripts/prerender.mjs",
-    "preview": "npx --yes wrangler@4 pages dev dist/client",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },

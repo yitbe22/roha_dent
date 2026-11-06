@@ -1,4 +1,0 @@
-# Cloudflare Pages (direct upload). Deploy with:  npm run deploy:web
-name = "roha-dent"
-pages_build_output_dir = "dist/client"
-compatibility_date = "2026-11-01"

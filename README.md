@@ -188,23 +188,21 @@ npx supabase@latest functions deploy admin-users --no-verify-jwt
 
 The public marketing pages (`src/content/*`) are still static. The dashboard's Clinic setup page edits the records that booking and SMS use, such as dentist names, durations and alert phones.
 
-### Website on Cloudflare Pages
+### Website on Cloudflare (Workers static assets)
 
-The site is static: prerendered public pages, plus one SPA shell (`app.html`) for `/admin`, `/booking/*` and `/b/*`. `public/_redirects` and `public/_headers` (security headers, CSP, caching) ship with it.
+The site is static: prerendered public pages, plus one SPA shell (`app.html`, served at `/app`) for `/admin`, `/booking/*` and `/b/*`. Cloudflare serves it as a Worker with static assets only, configured in `wrangler.jsonc` at the repo root. `apps/web/public/_redirects` and `_headers` (CSP, noindex for app routes, caching) are applied automatically.
 
-One-time setup:
-1. `npx wrangler login` (opens a browser).
-2. `apps/web/.env.local` holds the hosted Supabase URL and the publishable key. `apps/web/.env.production` sets `VITE_SITE_URL=https://rohadent.com` and the real `VITE_TURNSTILE_SITE_KEY`.
-3. In `supabase/functions/.env`, `ALLOWED_ORIGINS` must include `https://roha-dent.pages.dev` and `https://rohadent.com`, and `PUBLIC_SITE_URL=https://rohadent.com`. Then run `secrets set`.
+**Connected to GitHub (Workers Builds).** Every push to `main` deploys. The project settings:
+- Build command: `npm run build`
+- Deploy command: `npx wrangler deploy`
+- Build variables: `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` (the publishable key), `VITE_SITE_URL`, `VITE_TURNSTILE_SITE_KEY`
 
-Deploy (builds, then uploads `apps/web/dist/client`; creates the `roha-dent` project on the first run):
-```bash
-npm run deploy:web
-```
+Manual deploy from this machine: run `npx wrangler login` once, then `npm run deploy:web`.
 
-Custom domain: in Cloudflare, go to **Workers & Pages → roha-dent → Custom domains** and add `rohadent.com` and `www.rohadent.com`. The domain's DNS must be on Cloudflare. Until it is, the site runs at `https://roha-dent.pages.dev`, but links in SMS point to rohadent.com.
-
-**Turnstile (anti-bot) before launch:** create a widget in Cloudflare → Turnstile for `rohadent.com` and `roha-dent.pages.dev`. Put the site key in `.env.production` as `VITE_TURNSTILE_SITE_KEY` and the secret in `supabase/functions/.env` as `TURNSTILE_SECRET_KEY`. Then run `secrets set` and `npm run deploy:web`. The test keys used during development let every request through.
+The site's address (`*.workers.dev`, later `rohadent.com`) must also be listed in three places:
+1. `ALLOWED_ORIGINS` and `PUBLIC_SITE_URL` in `supabase/functions/.env`, then run `secrets set`
+2. the Turnstile widget's hostnames
+3. **Settings → Website address** in the dashboard, which is used for SMS links
 
 ### First owner account
 

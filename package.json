@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "npm run dev -w @roha/web",
     "build": "npm run build -w @roha/web",
-    "preview": "npm run preview -w @roha/web",
+    "preview": "npx --yes wrangler@4 dev",
     "typecheck": "npm run typecheck -w @roha/web",
     "db:verify": "node scripts/verify-db.mjs",
     "db:start": "supabase start",
@@ -19,7 +19,7 @@
     "dev:api": "node scripts/dev-api.mjs",
     "test": "npm run db:verify && npm run test:functions && npm run test -w @roha/web",
     "test:functions": "cd supabase/functions/_tests && deno test --allow-env",
-    "deploy:web": "npm run build && cd apps/web && npx --yes wrangler@4 pages deploy --branch main"
+    "deploy:web": "npm run build && npx --yes wrangler@4 deploy"
   },
   "engines": {
     "node": ">=20"

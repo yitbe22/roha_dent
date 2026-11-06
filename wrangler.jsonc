@@ -1,0 +1,13 @@
+// Cloudflare Workers (static assets only — no server code).
+// Workers Builds settings:  Build command: npm run build   ·   Deploy command: npx wrangler deploy
+{
+  "name": "roha-dent",
+  "compatibility_date": "2026-11-01",
+  "assets": {
+    "directory": "./apps/web/dist/client",
+    // /about → about.html (prerendered pages), unknown paths → 404.html
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "404-page"
+  }
+  // public/_redirects (/admin, /booking/*, /b/* → app.html) and public/_headers (CSP etc.) are applied automatically.
+}
