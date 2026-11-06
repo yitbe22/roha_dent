@@ -3,6 +3,7 @@
 /admin            /app.html  200
 /admin/*          /app.html  200
 /booking/*        /app.html  200
+/b/*              /app.html  200
 
 # Aliases / legacy paths → canonical URLs (keeps rankings)
 /dentists         /doctors   301

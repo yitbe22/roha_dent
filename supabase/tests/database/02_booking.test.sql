@@ -67,7 +67,7 @@ select 'B1', b.appointment_id, b.manage_token, b.dentist_id, b.status::text
 from ctx, public.book_appointment(ctx.addis, ctx.scaling, ctx.selam, pg_temp.at('09:00'), '  Abebe   Kebede ', '+251911000001', 'Sensitive gums') b;
 
 select is((select status from appt where label = 'B1'), 'pending', 'online booking starts as pending');
-select is((select char_length(token) from appt where label = 'B1'), 43, 'manage token is 43 chars (256-bit base64url)');
+select is((select char_length(token) from appt where label = 'B1'), 22, 'manage token is 22 chars (128-bit base64url)');
 select is((select full_name from public.patients where phone = '+251911000001'), 'Abebe Kebede', 'patient name is trimmed/collapsed');
 select throws_ok($$select * from public.book_appointment((select addis from ctx), (select scaling from ctx), (select selam from ctx),
                    pg_temp.at('09:00'), 'Other Person', '+251911000002')$$,

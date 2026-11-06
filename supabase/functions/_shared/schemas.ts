@@ -1,7 +1,7 @@
 // Request schemas shared by the web app (client validation) and Edge Functions (server validation).
 import { z } from 'zod';
 
-const token = z.string().min(32).max(128).regex(/^[A-Za-z0-9_-]+$/);
+const token = z.string().min(20).max(128).regex(/^[A-Za-z0-9_-]+$/);
 
 export const bookingRequestSchema = z.object({
   locationId: z.uuid(),

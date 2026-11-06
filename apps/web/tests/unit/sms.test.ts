@@ -53,3 +53,19 @@ describe('default English templates stay GSM-7 (cheap) with realistic values', (
     });
   }
 });
+
+describe('default SMS texts', async () => {
+  const { DEFAULT_TEMPLATES, WORST_CASE_VARS } = await import('@shared/sms.ts');
+  const { readFileSync, readdirSync } = await import('node:fs');
+  it.each(Object.entries(DEFAULT_TEMPLATES))('%s fits in one plain SMS even with the longest values', (_k, body) => {
+    const info = smsInfo(renderTemplate(body, WORST_CASE_VARS));
+    expect(info.encoding).toBe('gsm7');
+    expect(info.segments).toBe(1);
+  });
+  it('the migration installs exactly these texts', () => {
+    const dir = new URL('../../../../supabase/migrations/', import.meta.url);
+    const file = readdirSync(dir).find((f) => f.includes('short_sms'))!;
+    const sql = readFileSync(new URL(file, dir), 'utf8');
+    for (const body of Object.values(DEFAULT_TEMPLATES)) expect(sql).toContain(body.replace(/'/g, "''"));
+  });
+});

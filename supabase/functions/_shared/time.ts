@@ -101,3 +101,55 @@ export function clinicDayRange(dateKey: string): { from: string; to: string } {
 export function minutesBetween(a: string, b: string): number {
   return Math.round((new Date(b).getTime() - new Date(a).getTime()) / 60_000);
 }
+
+// ---- Ethiopian local time & calendar ------------------------------------------------------
+// Local (Ethiopian) clock: the day starts at 6:00 → "12:00 in the morning"; 08:30 → "2:30 ጠዋት".
+
+export type EthPeriod = 'night' | 'morning' | 'afternoon' | 'evening';
+export const ETH_PERIOD_AM: Record<EthPeriod, string> = { night: 'ሌሊት', morning: 'ጠዋት', afternoon: 'ከሰዓት', evening: 'ምሽት' };
+
+/** Ethiopian local clock for an instant, e.g. "2:30 ጠዋት" (lang 'am') or "2:30 morning" (lang 'en'). */
+export function ethiopianTime(at: Date | string, lang: 'am' | 'en' = 'am'): string {
+  const p = parts(new Date(at), { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+  return ethiopianClock(Number(p.hour), p.minute, lang);
+}
+
+/** Same, from a clinic wall-clock "HH:MM". */
+export function ethiopianTimeOfDay(hhmm: string, lang: 'am' | 'en' = 'am'): string {
+  return ethiopianClock(Number(hhmm.slice(0, 2)), hhmm.slice(3, 5), lang);
+}
+
+function ethiopianClock(h24: number, mm: string, lang: 'am' | 'en'): string {
+  const h = (h24 + 6) % 12 || 12;
+  const period: EthPeriod = h24 < 6 ? 'night' : h24 < 12 ? 'morning' : h24 < 18 ? 'afternoon' : 'evening';
+  return `${h}:${mm} ${lang === 'am' ? ETH_PERIOD_AM[period] : period}`;
+}
+
+export const ETH_MONTHS_AM = ['መስከረም', 'ጥቅምት', 'ኅዳር', 'ታኅሣሥ', 'ጥር', 'የካቲት', 'መጋቢት', 'ሚያዝያ', 'ግንቦት', 'ሰኔ', 'ሐምሌ', 'ነሐሴ', 'ጳጉሜ'];
+export const ETH_MONTHS_EN = ['Meskerem', 'Tikimt', 'Hidar', 'Tahsas', 'Tir', 'Yekatit', 'Megabit', 'Miyazya', 'Ginbot', 'Sene', 'Hamle', 'Nehase', 'Pagume'];
+
+const ETH_EPOCH_JDN = 1723856; // Amete Mihret
+
+/** Gregorian YYYY-MM-DD (clinic date key) → Ethiopian calendar date. */
+export function toEthiopianDate(key: string): { year: number; month: number; day: number } {
+  const [y, m, d] = key.split('-').map(Number);
+  const a = Math.floor((14 - m) / 12);
+  const yy = y + 4800 - a;
+  const mm = m + 12 * a - 3;
+  const jdn = d + Math.floor((153 * mm + 2) / 5) + 365 * yy + Math.floor(yy / 4) - Math.floor(yy / 100) + Math.floor(yy / 400) - 32045;
+  const r = (jdn - ETH_EPOCH_JDN) % 1461;
+  const n = (r % 365) + 365 * Math.floor(r / 1460);
+  return {
+    year: 4 * Math.floor((jdn - ETH_EPOCH_JDN) / 1461) + Math.floor(r / 365) - Math.floor(r / 1460),
+    month: Math.floor(n / 30) + 1,
+    day: (n % 30) + 1,
+  };
+}
+
+/** e.g. "ጥቅምት 27, 2019" (am) or "Tikimt 27, 2019" (en). Accepts a date key or an instant. */
+export function formatEthiopianDate(at: Date | string, lang: 'am' | 'en' = 'am', withYear = true): string {
+  const key = typeof at === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(at) ? at : clinicDateKey(at);
+  const e = toEthiopianDate(key);
+  const month = (lang === 'am' ? ETH_MONTHS_AM : ETH_MONTHS_EN)[e.month - 1];
+  return withYear ? `${month} ${e.day}, ${e.year}` : `${month} ${e.day}`;
+}

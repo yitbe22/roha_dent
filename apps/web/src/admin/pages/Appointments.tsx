@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { addDays, clinicDateKey, clinicDayRange, formatClinicDate, formatClinicTime } from '@shared/time.ts';
+import { addDays, clinicDateKey, clinicDayRange, ethiopianTime, formatClinicDate, formatClinicTime, formatEthiopianDate } from '@shared/time.ts';
 import { supabase } from '../supabase';
 import { useAuth } from '../auth';
 import { errorMessage, useLookups, usePendingCount } from '../data';
@@ -72,7 +72,7 @@ export default function AppointmentsPage() {
     <>
       <PageHeader
         title={view === "day" ? dayName(date) : "Requests to confirm"}
-        subtitle={view === 'day' ? formatClinicDate(date) : 'Booking requests from the website. Call each patient, then press Confirm.'}
+        subtitle={view === 'day' ? <>{formatClinicDate(date)} <span className="text-roha-500">· {formatEthiopianDate(date)}</span></> : 'Booking requests from the website. Call each patient, then press Confirm.'}
         actions={<ScopeSelect />}
       />
 
@@ -100,7 +100,7 @@ export default function AppointmentsPage() {
             <Stat label="Still to come" value={String(stats.toCome)} />
             <Stat label="Next patient"
               value={stats.next ? formatClinicTime(stats.next.starts_at) : '—'}
-              sub={stats.next ? stats.next.patient.full_name : isToday ? 'No more patients today' : undefined} />
+              sub={stats.next ? `${ethiopianTime(stats.next.starts_at)} · ${stats.next.patient.full_name}` : isToday ? 'No more patients today' : undefined} />
           </div>
 
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
@@ -194,6 +194,7 @@ export function AppointmentList({ items, showDate, highlightNext, showRequested 
                 {showDate && <span className="block font-semibold text-roha-700">{dayName(clinicDateKey(a.starts_at))}</span>}
                 <span className="block text-xl font-bold tabular-nums text-roha-900 sm:text-2xl">{formatClinicTime(a.starts_at)}</span>
                 <span className="block text-sm text-ink-soft tabular-nums">until {formatClinicTime(a.ends_at)}</span>
+                <span className="block text-sm font-medium text-roha-500" title="Ethiopian local time">{ethiopianTime(a.starts_at)}</span>
               </span>
               <span className="min-w-0 flex-1">
                 <span className="flex flex-wrap items-center gap-2">

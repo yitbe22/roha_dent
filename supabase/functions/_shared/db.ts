@@ -31,4 +31,4 @@ export function publicSiteUrl(): string {
   return (Deno.env.get('PUBLIC_SITE_URL') ?? 'https://rohadent.com').replace(/\/$/, '');
 }
 
-export const manageUrl = (token: string) => `${publicSiteUrl()}/booking/${token}`;
+export const manageUrl = (token: string) => `${publicSiteUrl()}/b/${token}`;

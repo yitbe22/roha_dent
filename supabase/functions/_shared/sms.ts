@@ -49,11 +49,13 @@ export function renderTemplate(body: string, vars: Record<string, string | numbe
 }
 
 export const TEMPLATE_PLACEHOLDERS = [
-  'patient_name', 'patient_full_name', 'date', 'time', 'service', 'location', 'dentist', 'location_phone', 'manage_link', 'patient_phone', 'status',
+  'patient_name', 'patient_full_name', 'date', 'time', 'service', 'location', 'dentist', 'location_phone', 'manage_link',
+  'patient_phone', 'status', 'local_time', 'local_date',
 ] as const;
+export type TemplateVar = (typeof TEMPLATE_PLACEHOLDERS)[number];
 
-/** Sample values for previews (lengths close to real data). */
-export const SAMPLE_VARS: Record<(typeof TEMPLATE_PLACEHOLDERS)[number], string> = {
+/** Sample values for previews (typical lengths). */
+export const SAMPLE_VARS: Record<TemplateVar, string> = {
   patient_name: 'Abebe',
   patient_full_name: 'Abebe Kebede',
   date: 'Tue 10 Nov',
@@ -62,7 +64,40 @@ export const SAMPLE_VARS: Record<(typeof TEMPLATE_PLACEHOLDERS)[number], string>
   location: 'Addis Ababa',
   dentist: 'Dr. Selam Bekele',
   location_phone: '+251 94 604 0506',
-  manage_link: 'https://rohadent.com/booking/3k9QzR7xWm2pL5vN8bY4tH6cJ1dF0gA9sE2uK7oI4wX',
+  manage_link: 'rohadent.com/b/3k9QzR7xWm2pL5vN8bY4tH',
   patient_phone: '+251911234567',
   status: 'pending',
+  local_time: '3:30 ጠዋት',
+  local_date: 'ኅዳር 1',
+};
+
+/** Longest realistic values — every default template must still fit in ONE SMS with these. */
+export const WORST_CASE_VARS: Record<TemplateVar, string> = {
+  patient_name: 'Gebremeskel',
+  patient_full_name: 'Gebremeskel Woldemariam',
+  date: 'Wed 30 Sep',
+  time: '16:45',
+  service: 'Braces (Invisible / Clear Aligners)',
+  location: 'Addis Ababa',
+  dentist: 'Dr. Selam Bekele',
+  location_phone: '+251 94 604 0506',
+  manage_link: 'rohadent.com/b/AbCdEfGhIjKlMnOpQrStUv',
+  patient_phone: '+251911234567',
+  status: 'confirmed',
+  local_time: '10:45 ከሰዓት',
+  local_date: 'መስከረም 20',
+};
+
+/**
+ * Default English texts (also installed by migration 0010). Written to fit in one SMS (160 plain
+ * characters): no Amharic letters, curly quotes or dashes, and a short manage link.
+ */
+export const DEFAULT_TEMPLATES: Record<string, string> = {
+  booking_received: "Roha Dental {location}: Hi {patient_name}, we got your request for {date} {time}. We'll SMS to confirm. Change: {manage_link}",
+  booking_confirmed: 'Roha Dental {location}: {patient_name}, confirmed: {service}, {date} {time}. Change/cancel: {manage_link}',
+  booking_cancelled: 'Roha Dental: your appointment {date} {time} is cancelled. To book again call {location_phone} or rohadent.com/book',
+  booking_rescheduled: 'Roha Dental {location}: your appointment is moved to {date} {time}. Details: {manage_link}',
+  reminder_24h: "Reminder: Roha Dental {location} tomorrow {date} {time}, {service}. Can't come? {manage_link}",
+  reminder_2h: 'Roha Dental: see you today at {time}, {location}. Questions: {location_phone}',
+  clinic_new_booking: 'New booking: {patient_full_name} {patient_phone}, {service}, {date} {time}, {location}, {dentist}',
 };

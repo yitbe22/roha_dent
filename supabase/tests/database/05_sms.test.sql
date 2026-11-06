@@ -44,10 +44,10 @@ select ok((select bool_and(status = 'queued') from public.sms_log where appointm
 
 set constraints all immediate; set constraints all deferred;
 select ok((select body from public.sms_log where appointment_id = (select appointment_id from b1) and type = 'booking_received')
-          like 'Roha Dental: Hi Abebe, %', 'patient_name renders as first name');
+          like 'Roha Dental Addis Ababa: Hi Abebe, %', 'patient_name renders as first name');
 set constraints all immediate; set constraints all deferred;
 select ok((select body from public.sms_log where appointment_id = (select appointment_id from b1) and type = 'booking_received')
-          like '%/booking/' || (select manage_token from b1), 'manage_link contains the token (secret exists at commit time)');
+          like '% rohadent.com/b/' || (select manage_token from b1), 'short manage_link (no https://) contains the token');
 set constraints all immediate; set constraints all deferred;
 select ok((select body from public.sms_log where appointment_id = (select appointment_id from b1) and type = 'booking_received')
           like '%09:00%', 'time renders in clinic time (24h)');

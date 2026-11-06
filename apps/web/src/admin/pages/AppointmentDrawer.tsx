@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { clinicDateKey, clinicIso, formatClinicDate, formatClinicTime, minutesBetween } from '@shared/time.ts';
+import { clinicDateKey, clinicIso, ethiopianTime, ethiopianTimeOfDay, formatClinicDate, formatClinicTime, formatEthiopianDate, minutesBetween } from '@shared/time.ts';
 import { formatEthiopianPhone } from '@shared/phone.ts';
 import { supabase } from '../supabase';
 import { errorMessage, useLookups } from '../data';
@@ -86,7 +86,9 @@ function Body({ a }: { a: Appointment }) {
 
         <div className="mt-5 rounded-lg bg-enamel p-4">
           <p className="text-lg font-bold text-roha-900">{formatClinicDate(a.starts_at)}</p>
-          <p className="text-2xl font-bold tabular-nums text-roha-900">{formatClinicTime(a.starts_at)} – {formatClinicTime(a.ends_at)}</p>
+          <p className="text-roha-500">{formatEthiopianDate(a.starts_at)}</p>
+          <p className="mt-1 text-2xl font-bold tabular-nums text-roha-900">{formatClinicTime(a.starts_at)} – {formatClinicTime(a.ends_at)}</p>
+          <p className="font-medium text-roha-500">Local time: {ethiopianTime(a.starts_at)} – {ethiopianTime(a.ends_at)}</p>
           <p className="mt-2">{service?.name} with {dentist?.full_name}</p>
           <p className="text-ink-soft">{lk?.location(a.location_id)?.city} clinic · booked by {SOURCE_LABEL[a.source].toLowerCase()} on {fmtDateTime(a.created_at)}</p>
           {a.reschedule_count > 0 && <p className="text-ink-soft">Time changed {a.reschedule_count}×</p>}
@@ -263,7 +265,7 @@ function RescheduleForm({ a, first, busy, onBack, onSave }: { a: Appointment; fi
         time={time} onTime={setTime} excludeStart={a.starts_at} />
       <div className="flex flex-wrap gap-2 border-t border-line pt-4">
         <button type="button" className={btn.primary} disabled={busy || !valid} onClick={save}>
-          {valid ? `Move to ${formatClinicDate(date, 'en-GB', false)} at ${time}` : 'Pick a time first'}
+          {valid ? `Move to ${formatClinicDate(date, 'en-GB', false)} at ${time} (${ethiopianTimeOfDay(time)})` : 'Pick a time first'}
         </button>
         <button type="button" className={btn.ghost} onClick={onBack}>Back</button>
       </div>

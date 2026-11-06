@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
-  addDays, clinicDateKey, formatClinicTime, groupSlots, splitByPartOfDay, weekdayOfKey, type TimeOption,
+  addDays, clinicDateKey, ethiopianTime, formatClinicTime, groupSlots, splitByPartOfDay, weekdayOfKey, type TimeOption,
 } from '@shared/time.ts';
 import { getAvailableDates, getAvailableSlots } from '../../lib/api';
 
@@ -25,7 +25,8 @@ type Props = {
 };
 
 export function TimePicker(p: Props) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const localLang = i18n.language?.startsWith('am') ? 'am' : 'en';
   const today = clinicDateKey();
   const lastDay = addDays(today, p.maxAdvanceDays);
   const [page, setPage] = useState(0);
@@ -124,11 +125,14 @@ export function TimePicker(p: Props) {
                         type="button"
                         aria-pressed={selected}
                         onClick={() => p.onChange(o)}
-                        className={`min-h-12 rounded-lg border font-semibold tabular-nums transition-colors ${
+                        className={`flex min-h-14 flex-col items-center justify-center rounded-lg border font-semibold leading-tight tabular-nums transition-colors ${
                           selected ? 'border-roha-700 bg-roha-700 text-white' : 'border-line bg-white text-roha-800 hover:border-roha-500'
                         }`}
                       >
-                        {formatClinicTime(o.startsAt)}
+                        <span>{formatClinicTime(o.startsAt)}</span>
+                        <span className={`text-[0.7rem] font-medium ${selected ? 'text-roha-100' : 'text-ink-soft'}`}>
+                          {ethiopianTime(o.startsAt, localLang)}
+                        </span>
                       </button>
                     );
                   })}

@@ -61,6 +61,7 @@ export function App() {
           <Route path="/faq" element={<Faq />} />
           <Route path="/book" element={<Book />} />
           <Route path="/booking/:token" element={<ManageBookingPage />} />
+          <Route path="/b/:token" element={<ManageBookingPage />} />
           <Route path="/register" element={<Register />} />
           <Route path="/careers" element={<Careers />} />
           <Route path="/events" element={<Events />} />

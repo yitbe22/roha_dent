@@ -20,6 +20,8 @@ const PLACEHOLDER_LABEL: Record<(typeof TEMPLATE_PLACEHOLDERS)[number], string> 
   manage_link: 'Change/cancel link',
   patient_phone: 'Patient phone',
   status: 'Status',
+  local_time: 'Local time (ጠዋት…)',
+  local_date: 'Ethiopian date',
 };
 
 const SMS_HINT: Record<SmsType, string> = {
@@ -270,6 +272,7 @@ function TemplateEditor({ type, tpl, readOnly }: { type: SmsType; tpl: SmsTempla
             ))}
           </div>
           <p className="text-xs text-ink-soft">Words in {'{curly brackets}'} are filled in automatically. Don’t change what is inside the brackets.</p>
+          <p className="text-xs text-ink-soft">Note: “Local time” and “Ethiopian date” are written in Amharic letters. Using them makes the SMS hold only 70 characters, so it may cost 2–3 SMS.</p>
           {unknown.length > 0 && <p className="text-sm text-red-700">Unknown: {unknown.map((u) => `{${u}}`).join(', ')} — this will be sent exactly as typed.</p>}
           <div className="flex flex-wrap gap-2">
             <button type="button" className={btn.primary} disabled={save.isPending || !body.trim() || !dirty} onClick={() => save.mutate()}>Save</button>

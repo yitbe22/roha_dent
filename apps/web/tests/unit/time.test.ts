@@ -82,3 +82,26 @@ describe('clinic wall-clock → instant', async () => {
     expect(minutesBetween(r.from, r.to)).toBe(1440);
   });
 });
+
+describe('Ethiopian local time and calendar', async () => {
+  const { ethiopianTime, ethiopianTimeOfDay, toEthiopianDate, formatEthiopianDate } = await import('@shared/time.ts');
+  it('converts clinic time to the local 12-hour clock', () => {
+    expect(ethiopianTimeOfDay('08:30')).toBe('2:30 ጠዋት');
+    expect(ethiopianTimeOfDay('06:00')).toBe('12:00 ጠዋት');
+    expect(ethiopianTimeOfDay('12:00')).toBe('6:00 ከሰዓት');
+    expect(ethiopianTimeOfDay('14:15')).toBe('8:15 ከሰዓት');
+    expect(ethiopianTimeOfDay('18:00')).toBe('12:00 ምሽት');
+    expect(ethiopianTimeOfDay('23:45', 'en')).toBe('5:45 evening');
+    expect(ethiopianTimeOfDay('03:00', 'en')).toBe('9:00 night');
+    expect(ethiopianTime('2026-11-10T05:30:00Z')).toBe('2:30 ጠዋት'); // 08:30 in Addis
+  });
+  it('converts Gregorian to Ethiopian dates', () => {
+    expect(toEthiopianDate('2026-09-11')).toEqual({ year: 2019, month: 1, day: 1 }); // Enkutatash
+    expect(toEthiopianDate('2023-09-12')).toEqual({ year: 2016, month: 1, day: 1 }); // after a Gregorian leap year
+    expect(toEthiopianDate('2026-01-07')).toEqual({ year: 2018, month: 4, day: 29 }); // Genna
+    expect(toEthiopianDate('2026-01-19')).toEqual({ year: 2018, month: 5, day: 11 }); // Timket
+    expect(toEthiopianDate('2026-09-06')).toEqual({ year: 2018, month: 13, day: 1 }); // Pagume 1
+    expect(formatEthiopianDate('2026-11-06')).toBe('ጥቅምት 27, 2019');
+    expect(formatEthiopianDate('2026-11-06', 'en', false)).toBe('Tikimt 27');
+  });
+});

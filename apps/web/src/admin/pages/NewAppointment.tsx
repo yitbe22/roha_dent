@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { formatEthiopianPhone, normalizeEthiopianPhone } from '@shared/phone.ts';
 import { renderTemplate, smsInfo } from '@shared/sms.ts';
-import { addDays, clinicDateKey, clinicIso, formatClinicDate } from '@shared/time.ts';
+import { addDays, clinicDateKey, clinicIso, ethiopianTimeOfDay, formatClinicDate, formatEthiopianDate } from '@shared/time.ts';
 import { supabase } from '../supabase';
 import { useAuth } from '../auth';
 import { errorMessage, useLookups } from '../data';
@@ -189,7 +189,7 @@ export default function NewAppointmentPage() {
                 <input type="date" className={`${inputInline} w-auto`} value={date} min={today} onChange={(e) => e.target.value && setDate(e.target.value)} aria-label="Other day" />
               </label>
             </div>
-            <p className="mb-3 font-semibold text-roha-900">{formatClinicDate(date)}</p>
+            <p className="mb-3 font-semibold text-roha-900">{formatClinicDate(date)} <span className="font-normal text-roha-500">· {formatEthiopianDate(date)}</span></p>
             {locationId && serviceId ? (
               <SlotField locationId={locationId} serviceId={serviceId} dentistId={dentistId} date={date} time={time} onTime={setTime} />
             ) : (
@@ -204,7 +204,7 @@ export default function NewAppointmentPage() {
               <Row label="Patient" value={name.trim() ? `${name.trim()}${parsedPhone.ok ? ` · ${formatEthiopianPhone(parsedPhone.e164)}` : ''}` : undefined} />
               <Row label="Treatment" value={service ? `${service.name} (${service.duration_minutes} min)` : undefined} />
               <Row label="Dentist" value={lk?.dentist(dentistId)?.full_name} />
-              <Row label="When" value={time ? `${dayName(date)}, ${formatClinicDate(date, 'en-GB', false)} at ${time}` : undefined} />
+              <Row label="When" value={time ? `${dayName(date)}, ${formatClinicDate(date, 'en-GB', false)} at ${time} (${ethiopianTimeOfDay(time)} local)` : undefined} />
             </dl>
 
             <div className="mt-5">

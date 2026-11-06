@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { formatClinicTime, splitByPartOfDay, groupSlots } from '@shared/time.ts';
+import { ethiopianTime, ethiopianTimeOfDay, formatClinicTime, splitByPartOfDay, groupSlots } from '@shared/time.ts';
 import { supabase } from '../supabase';
 import { Field, inputInline } from '../ui';
 
@@ -62,10 +62,11 @@ export function SlotField(p: Props) {
                   const on = p.time === t;
                   return (
                     <button key={o.startsAt} type="button" aria-pressed={on} onClick={() => { setManual(false); p.onTime(t); }}
-                      className={`min-h-11 min-w-20 rounded-lg border-2 px-3 text-base font-bold tabular-nums transition-colors ${
+                      className={`flex min-h-12 min-w-24 flex-col items-center justify-center rounded-lg border-2 px-3 py-1 leading-tight tabular-nums transition-colors ${
                         on ? 'border-roha-700 bg-roha-700 text-white' : 'border-line bg-white text-roha-800 hover:border-roha-500'
                       }`}>
-                      {t}
+                      <span className="text-base font-bold">{t}</span>
+                      <span className={`text-xs font-medium ${on ? 'text-roha-100' : 'text-roha-500'}`}>{ethiopianTime(o.startsAt)}</span>
                     </button>
                   );
                 })}
@@ -76,7 +77,7 @@ export function SlotField(p: Props) {
       )}
 
       {manual || (p.time && !isSlot) ? (
-        <Field label="Other time" hint="Clinic time, 24-hour clock (e.g. 14:30). The system checks the dentist is free.">
+        <Field label="Other time" hint={/^\d{2}:\d{2}$/.test(p.time) ? `Local time: ${ethiopianTimeOfDay(p.time)}. The system checks the dentist is free.` : '24-hour clock, e.g. 14:30 (= 8:30 ከሰዓት local). The system checks the dentist is free.'}>
           <input type="time" step={300} className={`${inputInline} w-40`} value={p.time} onChange={(e) => p.onTime(e.target.value)} autoFocus={manual} />
         </Field>
       ) : (
