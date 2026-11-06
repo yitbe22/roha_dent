@@ -1,0 +1,38 @@
+// Request schemas shared by the web app (client validation) and Edge Functions (server validation).
+import { z } from 'zod';
+
+const token = z.string().min(32).max(128).regex(/^[A-Za-z0-9_-]+$/);
+
+export const bookingRequestSchema = z.object({
+  locationId: z.uuid(),
+  serviceId: z.uuid(),
+  dentistId: z.uuid().nullable(),
+  startsAt: z.iso.datetime({ offset: true }),
+  fullName: z.string().trim().min(2).max(100),
+  phone: z.string().trim().min(9).max(20),
+  notes: z.string().trim().max(500).optional(),
+  turnstileToken: z.string().min(1).max(4096),
+  /** Honeypot: real users never fill this. */
+  website: z.string().max(0).optional(),
+});
+export type BookingRequest = z.infer<typeof bookingRequestSchema>;
+
+export const manageRequestSchema = z.discriminatedUnion('action', [
+  z.object({ action: z.literal('get'), token }),
+  z.object({ action: z.literal('cancel'), token, reason: z.string().trim().max(500).optional() }),
+  z.object({
+    action: z.literal('reschedule'),
+    token,
+    startsAt: z.iso.datetime({ offset: true }),
+    dentistId: z.uuid().nullable().optional(),
+  }),
+]);
+export type ManageRequest = z.infer<typeof manageRequestSchema>;
+
+/** Stable error codes returned by the Edge Functions (mapped to UI text in the web app). */
+export const API_ERROR_CODES = [
+  'VALIDATION', 'INVALID_JSON', 'METHOD_NOT_ALLOWED', 'INVALID_PHONE', 'UNSUPPORTED_NETWORK', 'INVALID_NAME',
+  'INVALID_NOTES', 'RATE_LIMITED', 'TURNSTILE_FAILED', 'SLOT_UNAVAILABLE', 'TOO_MANY_ACTIVE_BOOKINGS',
+  'NOT_FOUND', 'CANNOT_CANCEL', 'CANNOT_RESCHEDULE', 'SERVER_ERROR',
+] as const;
+export type ApiErrorCode = (typeof API_ERROR_CODES)[number];

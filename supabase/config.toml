@@ -1,0 +1,47 @@
+# Supabase CLI config (local dev). Unlisted keys use CLI defaults.
+project_id = "roha-dent"
+
+[api]
+port = 54321
+schemas = ["public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+major_version = 17
+
+[db.seed]
+enabled = true
+sql_paths = ["./seed.sql"]
+
+[realtime]
+enabled = true
+
+[studio]
+port = 54323
+
+[auth]
+site_url = "http://localhost:5173"
+additional_redirect_urls = ["http://localhost:5173/admin", "https://rohadent.com/admin"]
+# Staff accounts are invited by the owner — nobody can self-register.
+enable_signup = false
+jwt_expiry = 3600
+
+[auth.email]
+enable_confirmations = false
+
+# Public endpoints: protected by Turnstile, rate limits and the manage-link token instead of a JWT
+# (also required for the new non-JWT publishable keys).
+[functions.create-booking]
+verify_jwt = false
+
+[functions.manage-booking]
+verify_jwt = false
+
+# Internal worker (called by pg_net/pg_cron with x-worker-secret) and provider webhook (?secret=…)
+[functions.send-sms]
+verify_jwt = false
+
+[functions.sms-delivery-webhook]
+verify_jwt = false

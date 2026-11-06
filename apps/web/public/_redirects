@@ -1,0 +1,16 @@
+# Cloudflare Pages redirects. Public pages are prerendered to /<path>.html and served at /<path>.
+# Client-only app routes (dashboard, patient manage link) use the SPA shell:
+/admin            /app.html  200
+/admin/*          /app.html  200
+/booking/*        /app.html  200
+
+# Aliases / legacy paths → canonical URLs (keeps rankings)
+/dentists         /doctors   301
+/our-dentists     /doctors   301
+/locations        /contact   301
+/locations/roha-gonder /locations/gonder 301
+/locations/addis  /locations/addis-ababa 301
+/booking          /book      301
+/appointment      /book      301
+/home             /          301
+/index.html       /          301

@@ -1,0 +1,100 @@
+@import '@fontsource-variable/figtree/wght.css';
+@import 'tailwindcss';
+
+/*
+  Roha palette
+  roha-700  #163472  brand blue (buttons, footer, motif)
+  ink       #0F1D3A  body text (blue-black, AAA on enamel)
+  enamel    #F5F8FC  page background — cool white, like enamel
+  mist      #E3EBF7  quiet surfaces
+  adey      #F2C14E  Adey Abeba yellow — highlights & focus only (used on blue, never as text on white)
+*/
+@theme {
+  --font-sans: 'Figtree Variable', ui-sans-serif, system-ui, 'Noto Sans Ethiopic', 'Nyala', sans-serif;
+
+  --color-roha-50: #f3f6fc;
+  --color-roha-100: #e3ebf7;
+  --color-roha-200: #c7d5ee;
+  --color-roha-300: #9db4df;
+  --color-roha-500: #3a5fae;
+  --color-roha-600: #24468f;
+  --color-roha-700: #163472;
+  --color-roha-800: #10285a;
+  --color-roha-900: #0a1b3f;
+
+  --color-ink: #0f1d3a;
+  --color-ink-soft: #46556f;
+  --color-enamel: #f5f8fc;
+  --color-mist: #e3ebf7;
+  --color-line: #d3dcea;
+  --color-adey: #f2c14e;
+  --color-adey-soft: #fcefcc;
+
+  /* Type scale (≈ major third, 17px base) */
+  --text-base: 1.0625rem;
+  --text-base--line-height: 1.6;
+  --text-lede: 1.25rem;
+  --text-lede--line-height: 1.55;
+  --text-h3: 1.375rem;
+  --text-h3--line-height: 1.3;
+  --text-h2: clamp(1.75rem, 1.2rem + 1.8vw, 2.5rem);
+  --text-h2--line-height: 1.12;
+  --text-h1: clamp(2.25rem, 1.3rem + 3.6vw, 4rem);
+  --text-h1--line-height: 1.04;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-padding-top: 5rem;
+  }
+  body {
+    @apply bg-enamel text-ink font-sans text-base antialiased;
+    font-optical-sizing: auto;
+  }
+  h1, h2, h3 {
+    @apply text-roha-900;
+    font-weight: 780;
+    letter-spacing: -0.022em;
+    text-wrap: balance;
+  }
+  p { text-wrap: pretty; }
+  :focus-visible {
+    outline: 3px solid var(--color-adey);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  .on-blue :focus-visible { outline-color: var(--color-adey); }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+  }
+}
+
+@utility wrap { @apply mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8; }
+
+@utility btn {
+  @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-lg px-5 font-semibold transition-colors duration-150 select-none;
+}
+@utility btn-primary { @apply btn bg-roha-700 text-white hover:bg-roha-800; }
+@utility btn-adey { @apply btn bg-adey text-roha-900 hover:bg-[#f5cd6b]; }
+@utility btn-ghost { @apply btn border border-roha-200 bg-white text-roha-700 hover:border-roha-300 hover:bg-roha-50; }
+@utility btn-ghost-blue { @apply btn border border-white/30 text-white hover:bg-white/10; }
+
+@utility link {
+  @apply font-semibold text-roha-700 underline decoration-roha-300 decoration-2 underline-offset-4 hover:decoration-roha-700;
+}
+
+/* Stepped-cross motif from the plan of Bete Giyorgis, Lalibela (Roha) — 12×12 grid */
+@utility step-cross {
+  clip-path: polygon(25% 0, 75% 0, 75% 16.667%, 83.333% 16.667%, 83.333% 25%, 100% 25%, 100% 75%, 83.333% 75%,
+    83.333% 83.333%, 75% 83.333%, 75% 100%, 25% 100%, 25% 83.333%, 16.667% 83.333%, 16.667% 75%, 0 75%, 0 25%,
+    16.667% 25%, 16.667% 16.667%, 25% 16.667%);
+}
+/* The same stepped corner at small scale, top-left only */
+@utility step-corner {
+  clip-path: polygon(16px 0, 100% 0, 100% 100%, 0 100%, 0 16px, 8px 16px, 8px 8px, 16px 8px);
+}
+
+@utility input {
+  @apply block w-full rounded-lg border border-line bg-white px-4 py-3 text-base text-ink placeholder:text-ink-soft/60 aria-[invalid=true]:border-red-500;
+}

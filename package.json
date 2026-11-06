@@ -1,0 +1,30 @@
+{
+  "name": "roha-dent",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w @roha/web",
+    "build": "npm run build -w @roha/web",
+    "preview": "npm run preview -w @roha/web",
+    "typecheck": "npm run typecheck -w @roha/web",
+    "db:verify": "node scripts/verify-db.mjs",
+    "db:start": "supabase start",
+    "db:reset": "supabase db reset",
+    "db:test": "supabase test db",
+    "db:push": "supabase db push",
+    "dev:api": "node scripts/dev-api.mjs",
+    "test": "npm run db:verify && npm run test:functions && npm run test -w @roha/web",
+    "test:functions": "cd supabase/functions/_tests && deno test --allow-env"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.15",
+    "deno": "^2.9.6"
+  }
+}
