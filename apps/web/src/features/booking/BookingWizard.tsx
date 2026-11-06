@@ -258,9 +258,9 @@ export default function BookingWizard() {
                 {dentistsHere.length > 1 && (
                   <label className="mb-6 flex flex-wrap items-center gap-3">
                     <span className="font-semibold text-roha-900">{t('booking.time.dentist')}</span>
-                    <select className="input w-auto min-w-64 py-2.5" value={draft.dentistId}
+                    <select className="input w-full py-2.5 sm:w-auto sm:min-w-64" value={draft.dentistId}
                       onChange={(e) => setDraft((d) => ({ ...d, dentistId: e.target.value, date: undefined, slot: undefined }))}>
-                      <option value="any">{t('booking.dentist.any')} — {t('booking.dentist.anyHint').toLowerCase()}</option>
+                      <option value="any">{t('booking.dentist.any')}</option>
                       {dentistsHere.map((d) => <option key={d.id} value={d.id}>{d.full_name}{d.title ? ` · ${d.title}` : ''}</option>)}
                     </select>
                   </label>
