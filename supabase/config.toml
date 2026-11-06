@@ -45,3 +45,8 @@ verify_jwt = false
 
 [functions.sms-delivery-webhook]
 verify_jwt = false
+
+# Owner-only staff management. The function verifies the caller's access token itself
+# (works with both legacy JWT and new publishable keys).
+[functions.admin-users]
+verify_jwt = false

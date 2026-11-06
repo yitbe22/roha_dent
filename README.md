@@ -8,7 +8,7 @@ Public website, online booking, admin dashboard, and SMS notifications for Roha 
 | Backend  | Supabase (hosted): Postgres + RLS, Auth, Realtime, Edge Functions (Deno), pg_cron + pg_net |
 | SMS      | [SMS Ethiopia](https://smsethiopia.com/#/landing/docs/api-v1) v2 API, called only from Edge Functions |
 
-> Status: **Phases 1–3 (schema and RLS, public site, booking flow) done** and deployed to the hosted Supabase project. **Phase 4 (SMS) is built and tested locally**. Deploying it is covered in [SMS setup](#sms-setup-phase-4). Phases 5–6 (admin, hardening) are still to come.
+> Status: **Phases 1–4 (schema and RLS, public site, booking flow, SMS) done** and deployed to the hosted Supabase project. **Phase 5 (staff dashboard at `/admin`) is built**. See [Dashboard](#dashboard-phase-5). Phase 6 (hardening and launch) is still to come.
 
 **No Docker needed.** Everything below works with Node 20+ only. The Supabase CLI runs through `npx supabase@latest` and talks to the hosted project.
 
@@ -33,6 +33,8 @@ VITE_SUPABASE_URL=http://127.0.0.1:54321
 VITE_SUPABASE_ANON_KEY=dev-anon-key
 VITE_TURNSTILE_SITE_KEY=1x00000000000000000000AA
 ```
+The dev API has no Auth, so it can't run the `/admin` dashboard. To work on the dashboard, point `npm run dev` at the hosted project.
+
 The dev API resets on every start and uses Cloudflare's always-pass Turnstile test keys, so it needs an internet connection.
 
 SMS runs in **dry-run** mode in the dev API. The worker runs after every booking or manage call, and every 30 s it also handles reminders and retries. Nothing is sent. To see the rendered messages, their segment counts and their statuses, open http://127.0.0.1:54321/dev/sms. To send real messages from your machine, which costs SMS credit, run `SMS_DRY_RUN=false SMSETHIOPIA_API_KEY=… npm run dev:api`.
@@ -51,7 +53,8 @@ The `.test.sql` files are standard pgTAP. PGlite runs them through a small pgTAP
 ## Repo layout
 
 ```
-apps/web/                React app: public site, booking, /admin (phase 5)
+apps/web/                React app: public site, booking
+  src/admin/             /admin dashboard (lazy chunk, supabase-js + RLS; public pages never load it)
 supabase/
   config.toml
   migrations/            Schema, RLS, RPCs, triggers, default config
@@ -66,6 +69,7 @@ supabase/
     manage-booking/      POST {action: get|cancel|reschedule, token}
     send-sms/            internal worker (x-worker-secret): sends queued sms_log rows, retries, polls delivery
     sms-delivery-webhook/  optional SMS Ethiopia delivery webhook (?secret=…)
+    admin-users/         owner-only: create staff accounts, change role/clinic, deactivate, reset password
 scripts/
   dev-api.mjs            Local backend without Docker (PGlite + PostgREST stand-in + real functions)
   verify-db.mjs          Migrations + seed + tests in PGlite
@@ -122,7 +126,7 @@ Then:
 npx supabase@latest db push --remote --include-seed    # migrations + seed (seed: first time only)
 cp supabase/.env.example supabase/functions/.env       # fill in; never commit
 npx supabase@latest secrets set --env-file supabase/functions/.env
-npx supabase@latest functions deploy create-booking manage-booking send-sms sms-delivery-webhook --no-verify-jwt
+npx supabase@latest functions deploy create-booking manage-booking send-sms sms-delivery-webhook admin-users --no-verify-jwt
 ```
 
 In the dashboard:
@@ -158,6 +162,32 @@ How it works: a change to an appointment fires a deferred trigger at commit. The
 
 Failures: provider error codes are stored in `sms_log.error_code`/`error`, for example 10005 (balance empty), 10006 (sender ID not approved) and 10007 (number not whitelisted). Network errors, 429 and 5xx are retried once after 60 s. Templates are in `sms_templates` and use the placeholders listed in `_shared/sms.ts`. An Amharic or other non-GSM character switches the message to 70-character segments, which costs more.
 
+### Dashboard (phase 5)
+
+`/admin` is the staff dashboard. Users sign in with an email and password through Supabase Auth, and RLS controls what each one sees.
+
+| Page | Staff (own clinic) | Owner |
+|---|---|---|
+| Appointments: day view, a "needs confirmation" queue, live updates, a toast for each new online booking | ✓ | ✓ (all clinics, or filtered to one) |
+| Appointment panel: confirm, complete, no-show, cancel, reschedule (shows free times, or type any time), internal notes, SMS history and resend | ✓ | ✓ |
+| New appointment (phone call or walk-in, looks up returning patients by phone) | ✓ | ✓ |
+| Patients: search, visit history, notes | ✓ | ✓ |
+| SMS log: filters, last 24 h stats, resend | ✓ | ✓ |
+| Schedule: weekly working hours, closures and time off (lists bookings that fall inside them) | ✓ | ✓ |
+| Settings and SMS templates (with a live SMS segment counter) | read only | ✓ |
+| Clinic setup (alert phones, services, dentists and the services each one offers), Staff, Activity log | — | ✓ |
+
+Every change a patient should hear about (confirm, cancel, reschedule, new booking) sends its SMS automatically through the database triggers from phase 4.
+
+**Staff accounts.** On the Staff page, the owner creates an account and gets a **temporary password** to hand over in person. The staff member has to choose their own password at first sign-in. No email is sent, because Supabase's built-in mailer only delivers to project team members. "Reset password" issues a new temporary password, and "Deactivate" blocks sign-in immediately.
+
+Deploy the account function once:
+```bash
+npx supabase@latest functions deploy admin-users --no-verify-jwt
+```
+
+The public marketing pages (`src/content/*`) are still static. The dashboard's Clinic setup page edits the records that booking and SMS use, such as dentist names, durations and alert phones.
+
 ### First owner account
 
 Go to **Authentication → Users → Add user**, then run this in the SQL editor:
@@ -167,7 +197,7 @@ insert into public.profiles (id, full_name, role)
 select id, 'Clinic Owner', 'owner' from auth.users where email = 'owner@example.com';
 ```
 
-Staff accounts are then created from the admin dashboard *(phase 5)*.
+Then sign in at `/admin` and create staff accounts from the **Staff** page.
 
 ### Schema changes
 

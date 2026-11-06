@@ -83,3 +83,21 @@ export function splitByPartOfDay(options: TimeOption[]): Record<PartOfDay, TimeO
   for (const o of options) out[partOfDay(o.startsAt)].push(o);
   return out;
 }
+
+/** Ethiopia is UTC+3 all year (no DST), so clinic wall-clock ↔ instant is a fixed offset. */
+const CLINIC_OFFSET = '+03:00';
+
+/** Clinic wall-clock date + "HH:MM" → ISO instant (UTC). */
+export function clinicIso(dateKey: string, hhmm: string): string {
+  return new Date(`${dateKey}T${hhmm.slice(0, 5)}:00${CLINIC_OFFSET}`).toISOString();
+}
+
+/** [from, to) instants covering one clinic calendar day. */
+export function clinicDayRange(dateKey: string): { from: string; to: string } {
+  return { from: clinicIso(dateKey, '00:00'), to: clinicIso(addDays(dateKey, 1), '00:00') };
+}
+
+/** Minutes between two instants. */
+export function minutesBetween(a: string, b: string): number {
+  return Math.round((new Date(b).getTime() - new Date(a).getTime()) / 60_000);
+}

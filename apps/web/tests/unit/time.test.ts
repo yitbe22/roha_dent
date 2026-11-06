@@ -68,3 +68,17 @@ describe('groupSlots', () => {
     expect(partOfDay('2026-11-10T09:00:00Z')).toBe('afternoon'); // 12:00 local
   });
 });
+
+describe('clinic wall-clock → instant', async () => {
+  const { clinicIso, clinicDayRange, minutesBetween } = await import('@shared/time.ts');
+  it('converts Addis wall-clock to UTC', () => {
+    expect(clinicIso('2026-11-10', '08:30')).toBe('2026-11-10T05:30:00.000Z');
+    expect(clinicIso('2026-11-10', '00:00')).toBe('2026-11-09T21:00:00.000Z');
+    expect(clinicIso('2026-11-10', '14:15:00')).toBe('2026-11-10T11:15:00.000Z');
+  });
+  it('day range spans exactly 24h of clinic time', () => {
+    const r = clinicDayRange('2026-12-31');
+    expect(r).toEqual({ from: '2026-12-30T21:00:00.000Z', to: '2026-12-31T21:00:00.000Z' });
+    expect(minutesBetween(r.from, r.to)).toBe(1440);
+  });
+});

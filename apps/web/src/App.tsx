@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Route, Routes, useLocation } from 'react-router';
+import { lazy, Suspense, useEffect, useState } from 'react';
+import { Outlet, Route, Routes, useLocation } from 'react-router';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Layout } from './components/Layout';
 import Home from './pages/Home';
@@ -14,6 +14,17 @@ import Book from './pages/Book';
 import { Careers, Events, Register } from './pages/Simple';
 import NotFound from './pages/NotFound';
 import ManageBookingPage from './pages/ManageBookingPage';
+
+// Staff dashboard: its own shell, lazy-loaded so public pages never download supabase-js.
+const AdminApp = lazy(() => import('./admin/AdminApp'));
+
+function PublicShell() {
+  return (
+    <Layout>
+      <Outlet />
+    </Layout>
+  );
+}
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -30,8 +41,16 @@ export function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ScrollToTop />
-      <Layout>
-        <Routes>
+      <Routes>
+        <Route
+          path="/admin/*"
+          element={
+            <Suspense fallback={<p className="p-8 text-ink-soft">Loading…</p>}>
+              <AdminApp />
+            </Suspense>
+          }
+        />
+        <Route element={<PublicShell />}>
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<About />} />
           <Route path="/services" element={<Services />} />
@@ -46,8 +65,8 @@ export function App() {
           <Route path="/careers" element={<Careers />} />
           <Route path="/events" element={<Events />} />
           <Route path="*" element={<NotFound />} />
-        </Routes>
-      </Layout>
+        </Route>
+      </Routes>
     </QueryClientProvider>
   );
 }
