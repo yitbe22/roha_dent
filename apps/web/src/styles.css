@@ -108,10 +108,10 @@
   &:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 16px 30px -12px rgb(22 52 114 / 0.75); }
 }
 /* Translucent circle that holds a button's icon; give the button pl-2 */
-@utility btn-ic { @apply grid size-8 shrink-0 place-items-center rounded-full bg-white/20; }
+@utility btn-ic { @apply grid size-8 shrink-0 place-items-center rounded-full bg-white text-roha-700; }
 @utility btn-light { @apply btn bg-white text-roha-700 hover:bg-roha-50; }
 @utility btn-ghost { @apply btn border border-line bg-white text-roha-700 hover:border-sky hover:bg-[#f2f7ff]; }
-@utility btn-ghost-blue { @apply btn border border-white/35 text-white hover:bg-white/10; }
+@utility btn-ghost-blue { @apply btn border border-white text-white hover:bg-white hover:text-roha-700; }
 
 @utility link {
   @apply font-medium text-roha-700 underline decoration-sky/50 decoration-[1.5px] underline-offset-4 hover:decoration-sky;

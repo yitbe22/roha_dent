@@ -80,11 +80,11 @@ export function TreatmentExplorer() {
         {/* key → the content re-enters on every change */}
         <div key={s.slug} className="animate-[tx-in_0.55s_var(--ease-out-soft)]">
           <div className="flex flex-wrap items-center gap-2 text-sm">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 ring-1 ring-white/20">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1 font-medium text-roha-700">
               <Icon name="clock" className="size-4" />
               {t('common.visitLength', { count: s.durationMinutes })}
             </span>
-            <span className="rounded-full bg-white/15 px-3 py-1 ring-1 ring-white/20">
+            <span className="rounded-full bg-white px-3 py-1 font-medium text-roha-700">
               {s.visit.length} steps at your visit
             </span>
           </div>
@@ -108,7 +108,7 @@ export function TreatmentExplorer() {
               <ol className="mt-3 grid gap-2">
                 {s.visit.slice(0, 4).map((v, i) => (
                   <li key={v.title} className="flex items-center gap-2.5 text-[0.9375rem]">
-                    <span className="grid size-6 shrink-0 place-items-center rounded-full bg-white/15 text-xs tabular-nums">{i + 1}</span>
+                    <span className="grid size-6 shrink-0 place-items-center rounded-full bg-white text-xs font-medium text-roha-700 tabular-nums">{i + 1}</span>
                     {v.title}
                   </li>
                 ))}

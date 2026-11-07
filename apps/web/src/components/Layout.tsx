@@ -40,7 +40,7 @@ function Header() {
   return (
     <header
       className={`sticky top-0 z-30 transition-[background-color,box-shadow] duration-300 ${
-        solid ? 'bg-white/85 shadow-[0_1px_0_var(--color-line)] backdrop-blur-md' : 'bg-white'
+        solid ? 'bg-white shadow-[0_1px_0_var(--color-line)]' : 'bg-white'
       }`}
     >
       <div className="wrap flex h-16 items-center justify-between gap-6 lg:h-[4.25rem]">
@@ -156,7 +156,7 @@ function MobileActionBar() {
   const { pathname } = useLocation();
   if (pathname.startsWith('/book')) return null;
   return (
-    <div className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-white/90 backdrop-blur-md lg:hidden">
+    <div className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-white lg:hidden">
       <div className="grid grid-cols-3 gap-2 px-3 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
         {locations.map((l) => (
           <a key={l.slug} href={`tel:${l.phoneE164}`} className="btn-ghost min-h-12 gap-1.5 px-2 text-sm">

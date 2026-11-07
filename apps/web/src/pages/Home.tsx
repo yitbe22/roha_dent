@@ -64,7 +64,7 @@ export default function Home() {
             </ul>
           </div>
           <div data-reveal style={stagger(2)} className="relative isolate">
-            <div className="absolute inset-[8%] -z-10 rounded-full bg-[radial-gradient(closest-side,rgb(61_138_247/0.22),transparent)] blur-xl" aria-hidden="true" />
+            
             <img
               src="/img/clinic-room.webp"
               alt="A Roha treatment room with a blue and white dental chair"
@@ -92,9 +92,9 @@ export default function Home() {
           </div>
           <dl className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
             {facts.map((f, i) => (
-              <div key={f.label} data-reveal style={stagger(i + 2)} className="flex flex-col-reverse justify-end rounded-card border border-white/20 bg-white/10 p-4 backdrop-blur-md sm:p-5">
-                <dt className="mt-2 text-sm text-white/90">{f.label}</dt>
-                <dd className="font-display text-[clamp(1.625rem,4vw,3.25rem)] leading-none whitespace-nowrap font-medium tracking-[-0.03em] tabular-nums">{f.value}</dd>
+              <div key={f.label} data-reveal style={stagger(i + 2)} className="flex flex-col-reverse justify-end rounded-card bg-white p-4 text-ink sm:p-5">
+                <dt className="mt-2 text-sm text-ink-soft">{f.label}</dt>
+                <dd className="font-display text-[clamp(1.625rem,4vw,3.25rem)] leading-none whitespace-nowrap font-medium tracking-[-0.03em] text-roha-700 tabular-nums">{f.value}</dd>
               </div>
             ))}
           </dl>
@@ -139,16 +139,16 @@ export default function Home() {
               {t('cta.book')}
             </Link>
           </div>
-          <ol className="grid gap-3 sm:grid-cols-3">
+          <ol className="grid items-start gap-3 sm:grid-cols-3">
             {[
               ['Choose', 'Pick your clinic, the treatment and a dentist, or let us choose whoever is free.'],
               ['Pick a time', 'See the open times for the day you want and tap one.'],
               ['Get the SMS', 'We text you when we receive the request and again when it is confirmed.'],
             ].map(([title, body], i) => (
-              <li key={title} className="rounded-card bg-white/10 p-5 ring-1 ring-white/15">
-                <span className="grid size-9 place-items-center rounded-full bg-white font-display font-medium text-roha-700 tabular-nums">{i + 1}</span>
-                <h3 className="mt-5 text-h3 text-white">{title}</h3>
-                <p className="mt-2 text-[0.9375rem] text-white/90">{body}</p>
+              <li key={title} className="rounded-card bg-white p-5 text-ink">
+                <span className="grid size-9 place-items-center rounded-full bg-roha-700 font-display font-medium text-white tabular-nums">{i + 1}</span>
+                <h3 className="mt-5 text-h3">{title}</h3>
+                <p className="mt-2 text-[0.9375rem] text-ink-soft">{body}</p>
               </li>
             ))}
           </ol>
