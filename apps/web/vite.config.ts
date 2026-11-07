@@ -10,6 +10,7 @@ const src = fileURLToPath(new URL('./src', import.meta.url));
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   resolve: { alias: { '@shared': shared, '@': src } },
-  build: { sourcemap: false, target: 'es2022' },
+  // Never inline fonts as data: URLs: the CSP (public/_headers) only allows fonts from 'self'.
+  build: { sourcemap: false, target: 'es2022', assetsInlineLimit: (file: string) => (file.endsWith('.woff2') ? false : undefined) },
   test: { environment: 'node', include: ['tests/unit/**/*.test.ts'] },
 } as never);
