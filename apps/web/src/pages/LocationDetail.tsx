@@ -1,13 +1,20 @@
 import { Link, useParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
+import { ArrowUpRight, CalendarDays, Clock, MapPin, Phone } from 'lucide-react';
 import { Seo } from '../lib/seo';
 import { breadcrumbLd, dentistLd } from '../lib/schema';
+import { stagger } from '../lib/useReveal';
 import { getLocation, locations } from '../content/locations';
 import { dentists } from '../content/dentists';
 import { services } from '../content/services';
 import { PageIntro } from '../components/PageIntro';
+import { CtaBand } from '../components/CtaBand';
 import { Icon } from '../components/Icon';
+import { Monogram } from '../components/Monogram';
 import NotFound from './NotFound';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function LocationDetail() {
   const { slug = '' } = useParams();
@@ -23,6 +30,12 @@ export default function LocationDetail() {
   const team = dentists.filter((d) => d.locations.includes(l.slug));
   const other = locations.find((x) => x.slug !== l.slug)!;
 
+  const facts = [
+    { icon: MapPin, title: t('common.address'), body: [l.address, l.directions], link: { href: l.mapUrl, label: t('cta.directions') } },
+    { icon: Clock, title: t('common.hours'), body: l.hoursText },
+    { icon: Phone, title: t('common.phone'), body: [l.phoneDisplay], link: { href: `https://wa.me/${l.whatsapp}`, label: t('cta.whatsapp') } },
+  ];
+
   return (
     <>
       <Seo
@@ -31,75 +44,96 @@ export default function LocationDetail() {
         path={`/locations/${l.slug}`}
         jsonLd={[dentistLd(l), breadcrumbLd(crumbs)]}
       />
-      <PageIntro crumbs={crumbs} title={`Roha Dental in ${l.city}`} lede={l.intro}>
-        <div className="mt-8 flex flex-wrap gap-3">
-          <a href={`tel:${l.phoneE164}`} className="btn-primary px-6"><Icon name="phone" />{t('cta.callCity', { city: l.city })}</a>
-          <Link to={`/book?location=${l.slug}`} className="btn-ghost px-6"><Icon name="calendar" />{t('cta.book')}</Link>
-        </div>
-      </PageIntro>
-
-      <div className="wrap mt-14 grid gap-12 lg:grid-cols-[1fr_1fr]">
-        <section aria-labelledby="visit-h" className="space-y-8">
-          <h2 id="visit-h" className="text-h2">Visiting</h2>
-          <dl className="space-y-6">
-            <div>
-              <dt className="font-bold text-roha-900">{t('common.address')}</dt>
-              <dd className="mt-1">{l.address}</dd>
-              <dd className="mt-1 text-ink-soft">{l.directions}</dd>
-              <dd className="mt-2"><a href={l.mapUrl} target="_blank" rel="noopener" className="link">{t('cta.directions')}</a></dd>
-            </div>
-            <div>
-              <dt className="font-bold text-roha-900">{t('common.hours')}</dt>
-              {l.hoursText.map((h) => <dd key={h} className="mt-1">{h}</dd>)}
-            </div>
-            <div>
-              <dt className="font-bold text-roha-900">{t('common.phone')}</dt>
-              <dd className="mt-1 flex flex-wrap gap-x-6 gap-y-2">
-                <a href={`tel:${l.phoneE164}`} className="link">{l.phoneDisplay}</a>
-                <a href={`https://wa.me/${l.whatsapp}`} target="_blank" rel="noopener" className="link">{t('cta.whatsapp')}</a>
-              </dd>
-            </div>
-          </dl>
-          <a
-            href={l.mapUrl}
-            target="_blank"
-            rel="noopener"
-            className="rounded-card group relative flex aspect-[16/9] items-end overflow-hidden bg-roha-700 p-6 text-white"
-          >
-            <svg className="absolute inset-0 h-full w-full text-roha-600" aria-hidden="true">
+      <PageIntro
+        crumbs={crumbs}
+        title={`Roha Dental in ${l.city}`}
+        lede={l.intro}
+        media={
+          <a href={l.mapUrl} target="_blank" rel="noopener"
+            className="group relative flex aspect-[4/3] items-end overflow-hidden rounded-panel bg-roha-700 p-6 text-white lg:aspect-[5/4]">
+            <svg className="absolute inset-0 size-full text-roha-600" aria-hidden="true">
               <defs>
-                <pattern id={`grid-${l.slug}`} width="32" height="32" patternUnits="userSpaceOnUse">
-                  <path d="M32 0H0v32" fill="none" stroke="currentColor" strokeWidth="1" />
+                <pattern id={`grid-${l.slug}`} width="36" height="36" patternUnits="userSpaceOnUse">
+                  <path d="M36 0H0v36" fill="none" stroke="currentColor" strokeWidth="1" />
                 </pattern>
               </defs>
               <rect width="100%" height="100%" fill={`url(#grid-${l.slug})`} />
             </svg>
-            <span className="absolute top-1/2 left-1/2 grid size-11 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-white text-roha-700 shadow-lg" aria-hidden="true"><Icon name="pin" className="size-5" /></span>
-            <span className="relative font-semibold group-hover:underline">Open {l.city} clinic in Google Maps</span>
+            <span className="absolute top-1/2 left-1/2 grid size-14 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-white text-roha-700 shadow-[0_12px_30px_-10px_rgb(0_0_0/0.45)]" aria-hidden="true">
+              <MapPin className="size-6" />
+            </span>
+            <span className="relative flex w-full items-center justify-between gap-4 font-medium">
+              Open {l.city} clinic in Google Maps
+              <span className="grid size-9 place-items-center rounded-full bg-white text-roha-700" aria-hidden="true"><ArrowUpRight className="size-4" /></span>
+            </span>
           </a>
-        </section>
+        }
+      >
+        <div className="mt-8 flex flex-wrap gap-3">
+          <Button asChild><a href={`tel:${l.phoneE164}`}><Phone data-icon="inline-start" />{t('cta.callCity', { city: l.city })}</a></Button>
+          <Button asChild variant="outline"><Link to={`/book?location=${l.slug}`}><CalendarDays data-icon="inline-start" />{t('cta.book')}</Link></Button>
+        </div>
+      </PageIntro>
 
-        <section aria-labelledby="team-h">
-          <h2 id="team-h" className="text-h2">Dentists in {l.city}</h2>
-          <ul className="mt-6 space-y-5">
-            {team.map((d) => (
-              <li key={d.slug} className="border-b border-line pb-5">
-                <p className="text-lg font-bold text-roha-900">{d.name}</p>
-                <p className="text-ink-soft">{d.title}</p>
+      <section aria-label="Visiting" className="wrap mt-[clamp(2.5rem,5vw,4rem)] grid gap-4 md:grid-cols-3">
+        {facts.map((f, i) => (
+          <Card key={f.title} data-reveal style={stagger(i)}>
+            <CardHeader>
+              <f.icon className="mb-3 size-6 text-roha-500" aria-hidden="true" />
+              <CardTitle><h2 className="text-xl leading-tight">{f.title}</h2></CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-1">
+              {f.body.map((b, j) => <p key={b} className={j === 0 ? 'text-ink' : ''}>{b}</p>)}
+              {f.link && (
+                <a href={f.link.href} target="_blank" rel="noopener" className="link mt-3 inline-flex w-fit items-center gap-1.5">
+                  {f.link.label === t('cta.whatsapp') && <Icon name="whatsapp" className="size-4" />}
+                  {f.link.label}
+                </a>
+              )}
+            </CardContent>
+          </Card>
+        ))}
+      </section>
+
+      <section aria-labelledby="team-h" className="wrap mt-[clamp(4rem,9vw,7.5rem)] grid gap-10 lg:grid-cols-[1fr_2fr] lg:gap-16">
+        <div data-reveal>
+          <h2 id="team-h" className="text-h2 max-w-[12ch]">Dentists in {l.city}</h2>
+          <Link to="/doctors" className="link mt-5 inline-block">All dentists</Link>
+        </div>
+        <ul className="grid gap-3 sm:grid-cols-2">
+          {team.map((d, i) => (
+            <li key={d.slug} data-reveal style={stagger(i + 1)}>
+              <Link to={`/doctors#${d.slug}`} className="flex items-center gap-4 rounded-card p-4 ring-1 ring-line transition-colors hover:ring-roha-300">
+                <Monogram name={d.name} className="size-14 text-lg" />
+                <span className="leading-tight">
+                  <span className="block font-display text-lg text-ink">{d.name}</span>
+                  <span className="text-sm">{d.title}</span>
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section aria-labelledby="svc-h" className="wrap mt-[clamp(4rem,9vw,7.5rem)] grid gap-10 lg:grid-cols-[1fr_2fr] lg:gap-16">
+        <h2 id="svc-h" data-reveal className="text-h2 max-w-[12ch]">Treatments here</h2>
+        <div data-reveal style={stagger(1)}>
+          <ul className="flex flex-wrap gap-2">
+            {services.map((s) => (
+              <li key={s.slug}>
+                <Badge asChild variant="outline" className="h-10 px-4 text-[0.9375rem] hover:border-roha-300">
+                  <Link to={`/services/${s.slug}`}>{s.shortName}</Link>
+                </Badge>
               </li>
             ))}
           </ul>
-          <h2 className="mt-12 text-h3">Treatments offered</h2>
-          <ul className="mt-4 grid gap-2 sm:grid-cols-2">
-            {services.map((s) => (
-              <li key={s.slug}><Link to={`/services/${s.slug}`} className="link">{s.shortName}</Link></li>
-            ))}
-          </ul>
-          <p className="mt-12 text-ink-soft">
+          <p className="mt-8">
             Also in {other.city}: <Link to={`/locations/${other.slug}`} className="link">Roha Dental {other.city}</Link>
           </p>
-        </section>
-      </div>
+        </div>
+      </section>
+
+      <CtaBand bookTo={`/book?location=${l.slug}`} />
     </>
   );
 }

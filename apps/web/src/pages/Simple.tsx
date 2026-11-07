@@ -3,6 +3,8 @@ import { Seo } from '../lib/seo';
 import { breadcrumbLd } from '../lib/schema';
 import { locations } from '../content/locations';
 import { PageIntro } from '../components/PageIntro';
+import { CtaBand } from '../components/CtaBand';
+import { Button } from '@/components/ui/button';
 
 // Small pages kept so existing URLs from the old sitemap keep working.
 
@@ -14,7 +16,8 @@ function Shell({ path, name, title, description, lede, children }: {
     <>
       <Seo title={title} description={description} path={path} jsonLd={[breadcrumbLd(crumbs)]} />
       <PageIntro crumbs={crumbs} title={title} lede={lede} />
-      <div className="wrap mt-12 max-w-prose space-y-5 text-lg">{children}</div>
+      <div data-reveal className="wrap mt-[clamp(2.5rem,5vw,4rem)] flex max-w-[44rem] flex-col items-start gap-5 text-lg leading-relaxed text-ink">{children}</div>
+      <CtaBand />
     </>
   );
 }
@@ -26,7 +29,7 @@ export function Register() {
       lede="You do not need to register in advance. Your patient record is created at your first booking.">
       <p>Book a time online with your name and phone number, or call the clinic. At your first visit we ask about your medical history and any medicines you take.</p>
       <p>Bring previous dental X-rays if you have them, and arrive about 10 minutes early.</p>
-      <Link to="/book" className="btn-primary">Book your first visit</Link>
+      <Button asChild className="mt-2"><Link to="/book">Book your first visit</Link></Button>
     </Shell>
   );
 }
@@ -37,7 +40,7 @@ export function Careers() {
       description="Work with Roha Speciality Dental Center in Addis Ababa or Gonder."
       lede="We are always glad to hear from dentists, dental nurses and front-desk staff.">
       <p>There are no open positions listed right now. To apply speculatively, call the clinic you would like to work at and ask for the clinic manager.</p>
-      <ul className="space-y-2">
+      <ul className="flex flex-col gap-2">
         {locations.map((l) => (
           <li key={l.slug}>{l.city}: <a href={`tel:${l.phoneE164}`} className="link">{l.phoneDisplay}</a></li>
         ))}

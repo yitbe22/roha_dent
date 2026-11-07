@@ -16,7 +16,7 @@
     "types": ["vite/client", "node"],
     "noEmit": true,
     "baseUrl": ".",
-    "paths": { "@shared/*": ["../../supabase/functions/_shared/*"] }
+    "paths": { "@shared/*": ["../../supabase/functions/_shared/*"], "@/*": ["./src/*"] }
   },
   "include": ["src", "tests/unit", "vite.config.ts"]
 }

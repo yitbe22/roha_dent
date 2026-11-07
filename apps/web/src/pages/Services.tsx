@@ -1,12 +1,17 @@
-import { Link } from 'react-router';
-import { useTranslation } from 'react-i18next';
 import { Seo } from '../lib/seo';
 import { breadcrumbLd } from '../lib/schema';
-import { services } from '../content/services';
+import { stagger } from '../lib/useReveal';
 import { PageIntro } from '../components/PageIntro';
+import { TreatmentGrid } from '../components/TreatmentGrid';
+import { CtaBand } from '../components/CtaBand';
+
+const promises = [
+  ['An examination first', 'The dentist checks your teeth and gums, and takes an X-ray if it is needed.'],
+  ['The price before treatment', 'You hear what the treatment costs and how many visits it takes, before anything starts.'],
+  ['Your decision', 'Nothing is done without your agreement. You can take time to think, and book later.'],
+] as const;
 
 export default function Services() {
-  const { t } = useTranslation();
   const crumbs = [{ name: 'Home', path: '/' }, { name: 'Services', path: '/services' }];
   return (
     <>
@@ -19,27 +24,28 @@ export default function Services() {
       <PageIntro
         crumbs={crumbs}
         title="Treatments"
-        lede="Every treatment starts with an examination, where the dentist explains what your teeth need and what it will cost. Nothing is done without your agreement."
+        lede="From a routine cleaning to crowns and aligners. Open a treatment to see who it is for, what happens at the visit and how long it takes."
       />
-      <div className="wrap mt-12">
-        <ul className="grid gap-x-12 border-t border-line md:grid-cols-2">
-          {services.map((s) => (
-            <li key={s.slug} className="border-b border-line py-7">
-              <h2 className="text-h3">
-                <Link to={`/services/${s.slug}`} className="hover:text-roha-700 hover:underline hover:decoration-sky hover:decoration-[1.5px] hover:underline-offset-4">
-                  {s.name}
-                </Link>
-              </h2>
-              <p className="mt-2 max-w-prose text-ink-soft">{s.summary}</p>
-              <p className="mt-3 text-sm font-semibold text-roha-600">{t('common.visitLength', { count: s.durationMinutes })}</p>
-              <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2">
-                <Link to={`/services/${s.slug}`} className="link">{t('cta.learnMore', { name: s.shortName.toLowerCase() })}</Link>
-                <Link to={`/book?service=${s.slug}`} className="link">{t('cta.book')}</Link>
-              </div>
+
+      <section aria-label="All treatments" className="wrap mt-[clamp(2.5rem,5vw,4rem)]">
+        <TreatmentGrid headingLevel="h2" />
+      </section>
+
+      <section aria-labelledby="how-h" className="wrap mt-[clamp(4rem,9vw,7.5rem)] grid gap-10 lg:grid-cols-[1fr_2fr] lg:gap-16">
+        <h2 id="how-h" data-reveal className="text-h2 max-w-[12ch]">How treatment works here</h2>
+        <ol className="grid border-t border-line sm:grid-cols-3">
+          {promises.map(([title, body], i) => (
+            <li key={title} data-reveal style={stagger(i + 1)}
+              className="border-b border-line py-6 sm:border-b-0 sm:border-l sm:px-6 sm:pt-6 sm:first:border-l-0 sm:first:pl-0">
+              <span className="font-display text-[2.75rem] leading-none font-medium tracking-[-0.04em] text-sky tabular-nums">{i + 1}</span>
+              <h3 className="mt-5 text-h3">{title}</h3>
+              <p className="mt-2 text-[0.9375rem]">{body}</p>
             </li>
           ))}
-        </ul>
-      </div>
+        </ol>
+      </section>
+
+      <CtaBand title="Not sure which treatment?" body="Book a check-up and the dentist will explain your options and prices at the visit. Or call us and describe what you feel." />
     </>
   );
 }

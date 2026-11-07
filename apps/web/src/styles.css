@@ -1,6 +1,12 @@
 @import '@fontsource-variable/schibsted-grotesk/wght.css';
 @import '@fontsource-variable/hanken-grotesk/wght.css';
 @import 'tailwindcss';
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+/*
+  ---break---
+*/
+@custom-variant dark (&:is(.dark *));
 
 /*
   Roha palette — taken from the logo
@@ -29,7 +35,7 @@
 
   --color-ink: #0f2350;
   --color-ink-soft: #42506e;
-  --color-muted: #7d8aa6;
+  --color-subtle: #7d8aa6;
   --color-enamel: #ffffff;
   --color-page: #f4f7fd;
   --color-mist: #e5eefc;
@@ -65,9 +71,10 @@
   html {
     -webkit-text-size-adjust: 100%;
     scroll-padding-top: 5rem;
+    @apply font-sans;
   }
   body {
-    @apply bg-enamel font-sans text-base text-ink-soft antialiased;
+    @apply font-sans text-base antialiased bg-background text-foreground;
   }
   h1, h2, h3, h4 {
     @apply font-display text-ink;
@@ -85,6 +92,9 @@
   .on-blue :focus-visible { outline-color: #fff; }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+  }
+  * {
+    @apply border-border outline-ring/50;
   }
 }
 
@@ -136,7 +146,7 @@
 @utility chip { @apply rounded-full border border-line bg-page px-3 py-1.5 text-sm text-roha-700; }
 
 @utility input {
-  @apply block w-full rounded-inner border border-line bg-white px-4 py-3 text-base text-ink placeholder:text-muted focus:border-sky focus:outline-none focus:ring-4 focus:ring-sky/20 aria-[invalid=true]:border-red-500;
+  @apply block w-full rounded-inner border border-line bg-white px-4 py-3 text-base text-ink placeholder:text-subtle focus:border-sky focus:outline-none focus:ring-4 focus:ring-sky/20 aria-[invalid=true]:border-red-500;
 }
 
 /* ---------- Intro screen (first page view of a visit; see public/boot.js) ----------
@@ -173,4 +183,54 @@
 .js-reveal:not(.reveal-ready) [data-reveal] { animation: reveal-fallback 0s 3s forwards; }
 .js-reveal [data-reveal].is-in { opacity: 1; transform: none; filter: none; }
 @keyframes reveal-fallback { to { opacity: 1; transform: none; filter: none; } }
-@keyframes tx-in { from { opacity: 0; transform: translateY(0.5rem); filter: blur(4px); } }
+/* ---------- shadcn/ui tokens, mapped onto the Roha palette (light only) ---------- */
+@theme inline {
+  --font-heading: var(--font-display);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #42506e;        /* body text */
+  --card: #ffffff;
+  --card-foreground: #0f2350;
+  --popover: #ffffff;
+  --popover-foreground: #0f2350;
+  --primary: #163472;           /* navy */
+  --primary-foreground: #ffffff;
+  --secondary: #e5eefc;         /* mist */
+  --secondary-foreground: #163472;
+  --muted: #f4f7fd;             /* page */
+  --muted-foreground: #42506e;
+  --accent: #eef4fe;
+  --accent-foreground: #163472;
+  --destructive: #c62828;
+  --border: #dbe4f3;
+  --input: #dbe4f3;
+  --ring: #3d8af7;              /* sky */
+  --radius: 0.625rem;
+}

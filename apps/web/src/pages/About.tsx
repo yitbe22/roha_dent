@@ -1,7 +1,9 @@
 import { Link } from 'react-router';
 import { Seo } from '../lib/seo';
 import { breadcrumbLd } from '../lib/schema';
-import { PageIntro } from '../components/PageIntro';
+import { stagger } from '../lib/useReveal';
+import { IntroPhoto, PageIntro } from '../components/PageIntro';
+import { Button } from '@/components/ui/button';
 
 const commitments = [
   ['You understand before we treat', 'The dentist explains what they see, your options and the cost. Treatment starts only when you agree.'],
@@ -22,11 +24,14 @@ export default function About() {
       />
       <PageIntro
         crumbs={crumbs}
-        title="About Roha Speciality Dental Center"
-        lede="We are a dental practice with clinics in Addis Ababa and Gonder, bringing general and specialist care together in one place."
+        title="About Roha"
+        lede="A dental practice with clinics in Addis Ababa and Gonder, bringing general and specialist care together in one place."
+        media={<IntroPhoto src="/img/clinic-room.webp" alt="A Roha treatment room with a blue and white dental chair" width={667} height={889} />}
       />
-      <div className="wrap mt-14 grid gap-14 lg:grid-cols-[1fr_1fr]">
-        <div className="max-w-prose space-y-5 text-lg">
+
+      <section aria-labelledby="story-h" className="wrap mt-[clamp(3rem,7vw,6rem)] grid gap-10 lg:grid-cols-[1fr_2fr] lg:gap-16">
+        <h2 id="story-h" data-reveal className="text-h2 max-w-[10ch]">Why “Roha”</h2>
+        <div data-reveal style={stagger(1)} className="flex max-w-[40rem] flex-col gap-5 text-lg leading-relaxed text-ink">
           <p>
             Roha is the old name of Lalibela, where churches were carved from a single piece of rock. We chose it as a reminder
             of patient, careful work that lasts.
@@ -35,26 +40,28 @@ export default function About() {
             Our team covers preventive care, cosmetic treatment, root canal therapy, crowns, dentures and orthodontics. Our
             orthodontist works at both clinics during the week, so patients in Gonder and Addis Ababa get the same options.
           </p>
-          <p className="text-ink-soft">
-            (Placeholder text. Replace with the clinic’s own story, founding year and team photos.)
-          </p>
         </div>
-        <section aria-labelledby="commit-h">
-          <h2 id="commit-h" className="text-h2">What you can expect</h2>
-          <dl className="mt-6 space-y-6">
-            {commitments.map(([title, body]) => (
-              <div key={title} className="border-l-2 border-sky pl-5">
-                <dt className="text-lg font-bold text-roha-900">{title}</dt>
-                <dd className="mt-1 text-ink-soft">{body}</dd>
+      </section>
+
+      <section aria-labelledby="commit-h" className="wrap mt-[clamp(4rem,9vw,7.5rem)]">
+        <div className="on-blue rounded-panel bg-roha-700 p-[clamp(1.5rem,5vw,4rem)] text-white">
+          <h2 id="commit-h" data-reveal className="text-h2 max-w-[14ch] text-white">What you can expect</h2>
+          <dl className="mt-[clamp(2rem,4vw,3rem)] grid sm:grid-cols-2 lg:grid-cols-4">
+            {commitments.map(([title, body], i) => (
+              <div key={title} data-reveal style={stagger(i + 1)}
+                className="border-t border-white/25 py-6 lg:border-t-0 lg:border-l lg:px-6 lg:py-1 lg:first:border-l-0 lg:first:pl-0">
+                <dt className="font-display text-xl leading-tight text-white">{title}</dt>
+                <dd className="mt-3 text-[0.9375rem] text-white/85">{body}</dd>
               </div>
             ))}
           </dl>
           <div className="mt-10 flex flex-wrap gap-3">
-            <Link to="/doctors" className="btn-ghost">Meet the dentists</Link>
-            <Link to="/book" className="btn-primary">Book appointment</Link>
+            <Button asChild variant="inverse"><Link to="/book">Book appointment</Link></Button>
+            <Button asChild variant="inverse-outline"><Link to="/doctors">Meet the dentists</Link></Button>
           </div>
-        </section>
-      </div>
+        </div>
+      </section>
+
     </>
   );
 }

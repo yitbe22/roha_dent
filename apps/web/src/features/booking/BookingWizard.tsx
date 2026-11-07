@@ -207,7 +207,7 @@ export default function BookingWizard() {
         <p className="sr-only">{t('booking.stepOf', { step: stepIndex + 1, total: STEPS.length })}</p>
         <ol className="grid grid-cols-3 gap-2" aria-hidden="true">
           {STEPS.map((s, i) => (
-            <li key={s} className={`text-sm ${i === stepIndex ? 'font-medium text-roha-700' : i < stepIndex ? 'text-roha-600' : 'text-muted'}`}>
+            <li key={s} className={`text-sm ${i === stepIndex ? 'font-medium text-roha-700' : i < stepIndex ? 'text-roha-600' : 'text-subtle'}`}>
               <span className={`mb-2 block h-1 rounded-full transition-colors duration-500 ${i <= stepIndex ? 'bg-gradient-to-r from-sky to-roha-700' : 'bg-mist'}`} />
               {t(STEP_LABEL[s])}
             </li>

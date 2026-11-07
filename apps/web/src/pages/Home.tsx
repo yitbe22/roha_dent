@@ -8,8 +8,11 @@ import { services } from '../content/services';
 import { dentists } from '../content/dentists';
 import { faqGroups } from '../content/faq';
 import { LocationPanel } from '../components/LocationPanel';
-import { Icon } from '../components/Icon';
-import { TreatmentExplorer } from '../components/TreatmentExplorer';
+import { TreatmentGrid } from '../components/TreatmentGrid';
+import { CalendarDays, MapPin } from 'lucide-react';
+import { Monogram } from '../components/Monogram';
+import { Button } from '@/components/ui/button';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { stagger } from '../lib/useReveal';
 
 function SectionHead({ id, title, children }: { id: string; title: string; children?: ReactNode }) {
@@ -49,11 +52,12 @@ export default function Home() {
               From routine cleaning to root canals, crowns and clear aligners. Pick a time online and we confirm it by SMS. You pay at the clinic.
             </p>
             <div data-reveal style={stagger(2)} className="mt-9 flex flex-wrap gap-3">
-              <Link to="/book" className="btn-primary pl-2">
-                <span className="btn-ic"><Icon name="calendar" className="size-4" /></span>
-                {t('cta.book')}
-              </Link>
-              <Link to="/services" className="btn-ghost">See treatments</Link>
+              <Button asChild size="lg">
+                <Link to="/book"><CalendarDays data-icon="inline-start" />{t('cta.book')}</Link>
+              </Button>
+              <Button asChild size="lg" variant="outline">
+                <Link to="/services">See treatments</Link>
+              </Button>
             </div>
             <ul data-reveal style={stagger(3)} className="mt-9 flex flex-wrap gap-2" aria-label="Clinics">
               {locations.map((l) => (
@@ -79,22 +83,23 @@ export default function Home() {
 
       {/* About: the clinic itself */}
       <section aria-labelledby="about-h" className="wrap">
-        <div data-reveal className="on-blue relative isolate flex min-h-[34rem] flex-col justify-between gap-12 overflow-hidden rounded-panel p-[clamp(1.5rem,4vw,2.75rem)] text-white">
+        <div data-reveal className="on-blue relative isolate flex min-h-[36rem] flex-col justify-between overflow-hidden rounded-panel text-white">
           <img src="/img/clinic-hallway.webp" alt="" width={1284} height={856} loading="lazy"
             className="absolute inset-0 -z-20 h-full w-full object-cover" />
           <div className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgb(29_62_130/0.9)_0%,rgb(42_82_158/0.66)_50%,rgb(25_55_120/0.9)_100%)]" aria-hidden="true" />
-          <div className="max-w-2xl">
+          <div className="max-w-2xl p-[clamp(1.5rem,4vw,2.75rem)]">
             <h2 id="about-h" className="text-h2 max-w-[15ch] text-white">Two clinics, one way of caring for you</h2>
             <p className="mt-5 max-w-[46ch] text-white/90">
               Roha Speciality Dental Center cares for families in Addis Ababa and Gonder. Every visit starts with an examination, so your dentist can explain what is needed, your options and what to expect before treatment begins.
             </p>
-            <Link to="/about" className="btn-ghost-blue mt-7">About Roha</Link>
+            <Button asChild variant="inverse-outline" className="mt-7"><Link to="/about">About Roha</Link></Button>
           </div>
-          <dl className="grid grid-cols-2 gap-2.5 lg:grid-cols-4">
+          <dl className="grid grid-cols-2 bg-roha-900 lg:grid-cols-4">
             {facts.map((f, i) => (
-              <div key={f.label} data-reveal style={stagger(i + 2)} className="flex flex-col-reverse justify-end rounded-card bg-white p-4 text-ink sm:p-5">
-                <dt className="mt-2 text-sm text-ink-soft">{f.label}</dt>
-                <dd className="font-display text-[clamp(1.625rem,4vw,3.25rem)] leading-none whitespace-nowrap font-medium tracking-[-0.03em] text-roha-700 tabular-nums">{f.value}</dd>
+              <div key={f.label} data-reveal style={stagger(i + 2)}
+                className="flex flex-col-reverse justify-end border-white/15 px-[clamp(1.25rem,3vw,2.75rem)] py-6 odd:border-r max-lg:nth-[n+3]:border-t lg:border-r lg:last:border-r-0 sm:py-8">
+                <dt className="mt-2 max-w-[22ch] text-sm text-white/80">{f.label}</dt>
+                <dd className="font-display text-[clamp(1.625rem,3.6vw,3rem)] leading-none font-medium tracking-[-0.03em] whitespace-nowrap tabular-nums">{f.value}</dd>
               </div>
             ))}
           </dl>
@@ -116,14 +121,17 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Treatments: pick one, read it, book it */}
+      {/* Treatments */}
       <section aria-labelledby="services-h" className="section-y bg-page">
         <div className="wrap">
-          <SectionHead id="services-h" title="Find the right treatment">
+          <SectionHead id="services-h" title="Treatments">
             <Link to="/services" className="link">{t('cta.allServices')}</Link>
           </SectionHead>
-          <div data-reveal style={stagger(1)} className="mt-[clamp(1.75rem,4vw,3rem)]">
-            <TreatmentExplorer />
+          <p data-reveal style={stagger(1)} className="mt-4 max-w-2xl">
+            Every treatment starts with an examination. The dentist explains what your teeth need and the price before anything is done.
+          </p>
+          <div className="mt-[clamp(1.75rem,4vw,3rem)]">
+            <TreatmentGrid />
           </div>
         </div>
       </section>
@@ -134,21 +142,20 @@ export default function Home() {
           <div>
             <h2 id="how-h" className="text-h2 text-white">Booking takes about a minute</h2>
             <p className="mt-5 text-white/90">No account and no payment online. You only need an Ethio Telecom number (09…) for the SMS.</p>
-            <Link to="/book" className="btn-light mt-8 pl-2">
-              <span className="btn-ic bg-roha-100"><Icon name="calendar" className="size-4" /></span>
-              {t('cta.book')}
-            </Link>
+            <Button asChild variant="inverse" className="mt-8">
+              <Link to="/book"><CalendarDays data-icon="inline-start" />{t('cta.book')}</Link>
+            </Button>
           </div>
-          <ol className="grid items-start gap-3 sm:grid-cols-3">
+          <ol className="grid sm:grid-cols-3">
             {[
               ['Choose', 'Pick your clinic, the treatment and a dentist, or let us choose whoever is free.'],
               ['Pick a time', 'See the open times for the day you want and tap one.'],
               ['Get the SMS', 'We text you when we receive the request and again when it is confirmed.'],
             ].map(([title, body], i) => (
-              <li key={title} className="rounded-card bg-white p-5 text-ink">
-                <span className="grid size-9 place-items-center rounded-full bg-roha-700 font-display font-medium text-white tabular-nums">{i + 1}</span>
-                <h3 className="mt-5 text-h3">{title}</h3>
-                <p className="mt-2 text-[0.9375rem] text-ink-soft">{body}</p>
+              <li key={title} className="border-t border-white/25 py-6 sm:border-t-0 sm:border-l sm:px-6 sm:py-1 sm:first:border-l-0 sm:first:pl-0">
+                <span className="font-display text-[3.5rem] leading-none font-medium tracking-[-0.04em] text-sky-soft tabular-nums">{i + 1}</span>
+                <h3 className="mt-6 text-h3 text-white">{title}</h3>
+                <p className="mt-2 text-[0.9375rem] text-white/85">{body}</p>
               </li>
             ))}
           </ol>
@@ -160,19 +167,19 @@ export default function Home() {
         <SectionHead id="team-h" title="Your dentists">
           <Link to="/doctors" className="link">Meet the team</Link>
         </SectionHead>
-        <ul className="mt-[clamp(1.75rem,4vw,3rem)] grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <ul className="mt-[clamp(1.75rem,4vw,3rem)] grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {dentists.map((d, i) => (
-            <li key={d.slug} data-reveal style={stagger(i + 1)} className="flex flex-col gap-3 rounded-card bg-panel p-2 pb-4 text-white">
-              <div className="grid aspect-[4/5] place-items-center rounded-inner bg-gradient-to-br from-[#eaf2ff] to-[#c9dcff] font-display text-[clamp(2.5rem,6vw,4rem)] font-medium tracking-[-0.05em] text-roha-700" aria-hidden="true">
-                {d.name.replace('Dr. ', '').split(' ').map((p) => p[0]).join('')}
-              </div>
-              <div className="px-1.5">
-                <p className="font-display text-lg leading-tight font-medium">{d.name}</p>
-                <p className="mt-1 text-sm text-white/90">{d.title}</p>
-                <p className="mt-1 text-sm text-white/85">
+            <li key={d.slug} data-reveal style={stagger(i + 1)} className="grid">
+              <Link to={`/doctors#${d.slug}`}
+                className="group flex flex-col rounded-card bg-white p-6 ring-1 ring-line transition-[box-shadow,transform] duration-300 ease-out-soft hover:-translate-y-1 hover:shadow-[0_18px_40px_-24px_rgb(15_35_80/0.45)] hover:ring-roha-300">
+                <Monogram name={d.name} className="size-16 text-xl" />
+                <span className="mt-8 font-display text-xl leading-tight text-ink">{d.name}</span>
+                <span className="mt-1.5 text-[0.9375rem]">{d.title}</span>
+                <span className="mt-4 flex items-center gap-1.5 text-sm text-roha-600">
+                  <MapPin className="size-4" aria-hidden="true" />
                   {d.locations.map((s) => locations.find((l) => l.slug === s)!.city).join(' and ')}
-                </p>
-              </div>
+                </span>
+              </Link>
             </li>
           ))}
         </ul>
@@ -184,19 +191,14 @@ export default function Home() {
           <h2 id="faq-h" className="text-h2">Before you book</h2>
           <Link to="/faq" className="link mt-5 inline-block">All questions</Link>
         </div>
-        <div data-reveal style={stagger(1)} className="divide-y divide-line border-y border-line">
+        <Accordion data-reveal style={stagger(1)} type="single" collapsible className="border-t border-line">
           {faqPreview.map((f) => (
-            <details key={f.q} className="group py-5">
-              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-display text-lg font-medium text-ink">
-                {f.q}
-                <span className="grid size-8 shrink-0 place-items-center rounded-full border border-line text-roha-700 transition-colors group-open:border-sky group-open:bg-[#f2f7ff]">
-                  <Icon name="plus" className="size-4 transition-transform duration-300 group-open:rotate-45" />
-                </span>
-              </summary>
-              <p className="mt-3 max-w-prose">{f.a}</p>
-            </details>
+            <AccordionItem key={f.q} value={f.q}>
+              <AccordionTrigger>{f.q}</AccordionTrigger>
+              <AccordionContent>{f.a}</AccordionContent>
+            </AccordionItem>
           ))}
-        </div>
+        </Accordion>
       </section>
     </>
   );

@@ -97,7 +97,7 @@ function Header() {
 function Footer() {
   const { t } = useTranslation();
   return (
-    <footer className="on-blue relative isolate mt-[clamp(4rem,9vw,7.5rem)] overflow-hidden bg-panel pb-28 text-white lg:pb-0">
+    <footer className="on-blue relative isolate mt-[clamp(3rem,6vw,5rem)] overflow-hidden bg-panel pb-28 text-white lg:pb-0">
       <img src="/img/logo-white.png" alt="" width={282} height={320} aria-hidden="true"
         className="pointer-events-none absolute -bottom-16 -left-10 -z-10 w-64 opacity-[0.08]" />
       <div className="wrap grid gap-12 pt-14 pb-12 md:grid-cols-[1.2fr_2fr_1fr] lg:pt-20">
