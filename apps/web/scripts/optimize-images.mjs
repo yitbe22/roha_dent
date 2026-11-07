@@ -2,7 +2,7 @@
 // Usage: node apps/web/scripts/optimize-images.mjs <folder with the original .jpg downloads>
 // Originals are named by the keys below (f1.jpg, addis.jpg, …). `sharp` is a root devDependency.
 import sharp from 'sharp';
-import { mkdirSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -47,6 +47,27 @@ for (const [name, size] of [['apple-touch-icon.png', 180], ['icon-192.png', 192]
   await sharp({ create: { width: size, height: size, channels: 4, background: '#ffffff' } }).composite([{ input: inner, gravity: 'centre' }]).png().toFile(join(pub, name));
   console.log('wrote', name);
 }
+
+// Browser-tab favicon: the logo, trimmed and centred on a transparent square.
+// favicon-32.png for <link rel="icon">, favicon.ico (16/32/48, PNG-in-ICO) for /favicon.ico requests.
+const square = async (size) => {
+  const inner = await sharp(logo).trim().resize(size, size, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } }).toBuffer();
+  return sharp({ create: { width: size, height: size, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } })
+    .composite([{ input: inner, gravity: 'centre' }]).png().toBuffer();
+};
+writeFileSync(join(pub, 'favicon-32.png'), await square(32));
+const pngs = await Promise.all([16, 32, 48].map(square));
+const head = Buffer.alloc(6 + 16 * pngs.length);
+head.writeUInt16LE(0, 0); head.writeUInt16LE(1, 2); head.writeUInt16LE(pngs.length, 4);
+let at = head.length;
+pngs.forEach((png, i) => {
+  const size = [16, 32, 48][i], o = 6 + 16 * i;
+  head.writeUInt8(size, o); head.writeUInt8(size, o + 1); head.writeUInt16LE(1, o + 4); head.writeUInt16LE(32, o + 6);
+  head.writeUInt32LE(png.length, o + 8); head.writeUInt32LE(at, o + 12);
+  at += png.length;
+});
+writeFileSync(join(pub, 'favicon.ico'), Buffer.concat([head, ...pngs]));
+console.log('wrote favicon-32.png, favicon.ico');
 
 // Social share image (referenced by content/site.ts → ogImage).
 await sharp(join(src, 'addis.jpg')).resize(1200, 630, { fit: 'cover' }).png({ compressionLevel: 9 }).toFile(join(pub, 'og-default.png'));
