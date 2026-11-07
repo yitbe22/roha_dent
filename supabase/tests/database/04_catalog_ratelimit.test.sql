@@ -1,11 +1,14 @@
 -- Booking catalog, rate limiter and manage-token storage.
 begin;
-select plan(10);
+select plan(11);
 
 -- catalog (anon)
 set local role anon;
 select is(jsonb_array_length(public.get_booking_catalog() -> 'locations'), 2, 'catalog: 2 locations');
-select is(jsonb_array_length(public.get_booking_catalog() -> 'services'), 7, 'catalog: 7 bookable services');
+select is(jsonb_array_length(public.get_booking_catalog() -> 'services'), 8, 'catalog: 8 bookable services (7 treatments + check-up)');
+select is((select count(*)::int from jsonb_array_elements(public.get_booking_catalog() -> 'dentists') d
+           where d -> 'service_ids' ? (select id::text from public.services where slug = 'checkup')),
+          (select jsonb_array_length(public.get_booking_catalog() -> 'dentists')), 'catalog: every dentist offers the check-up');
 select is((select jsonb_array_length(d -> 'location_ids') from jsonb_array_elements(public.get_booking_catalog() -> 'dentists') d
            where d ->> 'slug' = 'dr-yonas-girma'), 2, 'catalog: multi-location dentist lists both clinics');
 select ok((public.get_booking_catalog() -> 'settings' ->> 'max_advance_days')::int > 0, 'catalog: includes booking settings');

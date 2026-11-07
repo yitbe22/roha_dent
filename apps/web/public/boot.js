@@ -11,6 +11,6 @@
   try {
     if (sessionStorage.getItem('roha-intro')) return;
     sessionStorage.setItem('roha-intro', '1');
-    d.classList.add('show-loader');
+    d.classList.add('show-loader', 'hero-intro');
   } catch (e) { /* storage blocked: skip the intro */ }
 })();

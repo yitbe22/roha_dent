@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { Fragment, type CSSProperties, type ReactNode } from 'react';
 import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Seo } from '../lib/seo';
@@ -15,6 +15,8 @@ import { HeroTooth } from '../components/hero/HeroTooth';
 import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { stagger } from '../lib/useReveal';
+
+const HERO_TITLE = 'Specialist dental care in Addis Ababa and Gonder';
 
 function SectionHead({ id, title, children }: { id: string; title: string; children?: ReactNode }) {
   return (
@@ -45,14 +47,18 @@ export default function Home() {
       />
 
       {/* Hero */}
-      <section className="overflow-hidden">
+      <section className="hero overflow-hidden">
         <div className="wrap grid items-center gap-10 pt-8 pb-[clamp(3rem,7vw,6rem)] lg:grid-cols-[1.1fr_1fr] lg:gap-16 lg:pt-14">
           <div>
-            <h1 data-reveal className="text-h1 max-w-[13ch]">Specialist dental care in Addis Ababa and Gonder</h1>
-            <p data-reveal style={stagger(1)} className="mt-7 max-w-[34rem] text-lede">
+            <h1 data-reveal className="text-h1 max-w-[13ch]">
+              {HERO_TITLE.split(' ').map((w, i) => (
+                <Fragment key={i}>{i > 0 && ' '}<span data-intro style={{ '--i': i } as CSSProperties}>{w}</span></Fragment>
+              ))}
+            </h1>
+            <p data-reveal data-intro="fade" style={{ ...stagger(1), '--i': 0 } as CSSProperties} className="mt-7 max-w-[34rem] text-lede">
               From routine cleaning to root canals, crowns and clear aligners. Pick a time online and we confirm it by SMS. You pay at the clinic.
             </p>
-            <div data-reveal style={stagger(2)} className="mt-9 flex flex-wrap gap-3">
+            <div data-reveal data-intro="fade" style={{ ...stagger(2), '--i': 1 } as CSSProperties} className="mt-9 flex flex-wrap gap-3">
               <Button asChild size="lg">
                 <Link to="/book"><CalendarDays data-icon="inline-start" />{t('cta.book')}</Link>
               </Button>
@@ -60,7 +66,7 @@ export default function Home() {
                 <Link to="/services">See treatments</Link>
               </Button>
             </div>
-            <ul data-reveal style={stagger(3)} className="mt-9 flex flex-wrap gap-2" aria-label="Clinics">
+            <ul data-reveal data-intro="fade" style={{ ...stagger(3), '--i': 2 } as CSSProperties} className="mt-9 flex flex-wrap gap-2" aria-label="Clinics">
               {locations.map((l) => (
                 <li key={l.slug}>
                   <Link to={`/locations/${l.slug}`} className="chip inline-flex items-center gap-2 hover:border-sky"><span className="size-1.5 rounded-full bg-adey" aria-hidden="true" />{l.city}</Link>
@@ -68,7 +74,7 @@ export default function Home() {
               ))}
             </ul>
           </div>
-          <div data-reveal style={stagger(2)} className="-mt-12 lg:-mt-20">
+          <div data-reveal data-intro="tooth" style={stagger(2)} className="-mt-12 lg:-mt-20">
             <HeroTooth />
           </div>
         </div>

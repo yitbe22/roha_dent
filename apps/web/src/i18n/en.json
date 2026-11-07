@@ -36,6 +36,7 @@
     "placeholderNotice": "Placeholder profile"
   },
   "footer": {
+    "toTop": "Back to top",
     "tagline": "Specialist dental care in Addis Ababa and Gonder.",
     "clinics": "Our clinics",
     "explore": "Explore",
@@ -139,6 +140,23 @@
       "clinic": "Clinic",
       "treatment": "Treatment",
       "pickClinic": "Choose a clinic to see its treatments."
+    },
+    "form": {
+      "eyebrow": "Book online",
+      "title": "Book your first step",
+      "lede": "Choose a treatment, branch and day, then pick a free time. We confirm your visit by SMS.",
+      "namePlaceholder": "Full name",
+      "treatment": "Treatment",
+      "notSure": "Not sure yet (check-up)",
+      "pickTreatment": "Choose a treatment",
+      "branch": "Branch",
+      "date": "Preferred date",
+      "time": "Free times",
+      "with": "With {{name}}.",
+      "nextFree": "Next free day: {{day}}",
+      "pickDate": "Choose a date to see the free times.",
+      "pickTime": "Choose a time.",
+      "send": "Send request"
     }
   },
   "manage": {

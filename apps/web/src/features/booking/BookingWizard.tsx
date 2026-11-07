@@ -7,26 +7,21 @@ import { z } from 'zod';
 import { useTranslation } from 'react-i18next';
 import { normalizeEthiopianPhone, formatEthiopianPhone } from '@shared/phone.ts';
 import { isAllowedName } from '@shared/schemas.ts';
-import { ethiopianTime, formatClinicDate, formatClinicTime, type TimeOption } from '@shared/time.ts';
-import { ApiError, createBooking, getCatalog, type BookingResult, type Catalog } from '../../lib/api';
+import {
+  addDays, clinicDateKey, ethiopianTime, formatClinicDate, formatClinicTime, groupSlots, splitByPartOfDay, type TimeOption,
+} from '@shared/time.ts';
+import {
+  ApiError, createBooking, getAvailableDates, getAvailableSlots, getCatalog, type BookingResult, type Catalog,
+} from '../../lib/api';
+import { ArrowRight } from 'lucide-react';
 import { Icon } from '../../components/Icon';
-import { TimePicker, ErrorLine } from './TimePicker';
+import { ErrorLine } from './TimePicker';
 import { Turnstile } from './Turnstile';
 
-// Three steps: what & where → when (with an optional dentist filter) → who.
-const STEPS = ['choose', 'time', 'details'] as const;
-type Step = (typeof STEPS)[number] | 'done';
-const STEP_LABEL = { choose: 'booking.steps.service', time: 'booking.steps.time', details: 'booking.steps.details' } as const;
+/** The "not sure yet" check-up (migration 20261107000013). Every dentist offers it. */
+const NOT_SURE = 'checkup';
 
-type Draft = {
-  locationId?: string;
-  serviceId?: string;
-  dentistId: string | 'any';
-  date?: string;
-  slot?: TimeOption;
-};
-
-const detailsSchema = z.object({
+const schema = z.object({
   fullName: z.string().trim().min(2, 'nameRequired').max(100, 'nameRequired').refine(isAllowedName, 'nameInvalid'),
   phone: z
     .string()
@@ -41,7 +36,7 @@ const detailsSchema = z.object({
   notes: z.string().trim().max(500).optional(),
   website: z.string().max(0).optional(),
 });
-type Details = z.infer<typeof detailsSchema>;
+type Details = z.infer<typeof schema>;
 
 /** Dentists who offer a service at a location (from the catalog). */
 const dentistsFor = (c: Catalog, locationId?: string, serviceId?: string) =>
@@ -49,61 +44,86 @@ const dentistsFor = (c: Catalog, locationId?: string, serviceId?: string) =>
     (d) => (!locationId || d.location_ids.includes(locationId)) && (!serviceId || d.service_ids.includes(serviceId)),
   );
 
+/**
+ * One short form, like the clinic's own site: name, phone, treatment, branch, date.
+ * Once a date is picked, that day's free times appear underneath.
+ */
 export default function BookingWizard() {
   const { t, i18n } = useTranslation();
   const localLang = i18n.language?.startsWith('am') ? 'am' : 'en';
   const [params] = useSearchParams();
   const qc = useQueryClient();
   const catalog = useQuery({ queryKey: ['catalog'], queryFn: getCatalog, staleTime: 5 * 60_000 });
+  const c = catalog.data;
 
-  const [draft, setDraft] = useState<Draft>({ dentistId: 'any' });
-  const [step, setStep] = useState<Step>('choose');
+  const [locationId, setLocationId] = useState('');
+  const [serviceId, setServiceId] = useState('');
+  const [dentistId, setDentistId] = useState<string | null>(null);
+  const [date, setDate] = useState('');
+  const [slot, setSlot] = useState<TimeOption>();
   const [ready, setReady] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const [slotError, setSlotError] = useState(false);
   const [result, setResult] = useState<{ res: BookingResult; phone: string } | null>(null);
-  const headingRef = useRef<HTMLHeadingElement>(null);
+  const doneRef = useRef<HTMLHeadingElement>(null);
+  const timesRef = useRef<HTMLDivElement>(null);
 
-  // Pre-select from ?location=&service=&dentist= (slugs); a single clinic is chosen automatically.
+  const notSure = c?.services.find((s) => s.slug === NOT_SURE);
+
+  // Defaults: ?location=&service=&dentist= (slugs) if given, else the first branch and "not sure yet".
   useEffect(() => {
-    const c = catalog.data;
     if (!c || ready) return;
-    const loc = c.locations.find((l) => l.slug === params.get('location'));
-    const svc = c.services.find((s) => s.slug === params.get('service'));
     const den = c.dentists.find((d) => d.slug === params.get('dentist'));
-    const next: Draft = { dentistId: 'any' };
-    next.locationId = loc?.id ?? (den?.location_ids.length === 1 ? den.location_ids[0] : c.locations.length === 1 ? c.locations[0].id : undefined);
-    if (svc && (!next.locationId || dentistsFor(c, next.locationId, svc.id).length)) next.serviceId = svc.id;
-    if (den && (!next.locationId || den.location_ids.includes(next.locationId))) next.dentistId = den.id;
-    setDraft(next);
-    setStep(next.locationId && next.serviceId ? 'time' : 'choose');
+    const loc = c.locations.find((l) => l.slug === params.get('location'))
+      ?? c.locations.find((l) => den?.location_ids.includes(l.id))
+      ?? c.locations[0];
+    const svc = c.services.find((s) => s.slug === params.get('service'));
+    setLocationId(loc?.id ?? '');
+    setServiceId(svc && loc && dentistsFor(c, loc.id, svc.id).length ? svc.id : (notSure?.id ?? ''));
+    if (den && loc && den.location_ids.includes(loc.id)) setDentistId(den.id);
     setReady(true);
-  }, [catalog.data, params, ready]);
+  }, [c, params, ready, notSure]);
 
-  const goto = (s: Step) => {
-    setStep(s);
-    requestAnimationFrame(() => {
-      headingRef.current?.focus();
-      headingRef.current?.scrollIntoView({ block: 'start', behavior: 'smooth' });
-    });
+  const location = c?.locations.find((l) => l.id === locationId);
+  const service = c?.services.find((s) => s.id === serviceId);
+  const dentist = c?.dentists.find((d) => d.id === dentistId);
+  const treatments = useMemo(
+    () => (c && locationId ? c.services.filter((s) => s.slug !== NOT_SURE && dentistsFor(c, locationId, s.id).length) : []),
+    [c, locationId],
+  );
+
+  const today = clinicDateKey();
+  const lastDay = addDays(today, c?.settings.max_advance_days ?? 60);
+  const canLoad = !!(locationId && serviceId && date);
+
+  const slots = useQuery({
+    queryKey: ['slots', locationId, serviceId, dentistId, date],
+    queryFn: () => getAvailableSlots({ locationId, serviceId, dentistId, date }),
+    enabled: canLoad,
+  });
+  const groups = useMemo(() => splitByPartOfDay(groupSlots(slots.data ?? [])), [slots.data]);
+  const total = groups.morning.length + groups.afternoon.length + groups.evening.length;
+
+  // A closed or full day: offer the next day with free times.
+  const nextFree = useQuery({
+    queryKey: ['dates', locationId, serviceId, dentistId, date, 'next'],
+    queryFn: () => getAvailableDates({
+      locationId, serviceId, dentistId,
+      from: addDays(date, 1), to: addDays(date, 14) < lastDay ? addDays(date, 14) : lastDay,
+    }),
+    enabled: canLoad && slots.isSuccess && total === 0 && date < lastDay,
+  });
+  const nextDay = nextFree.data?.find((d) => d.slot_count > 0)?.day.slice(0, 10);
+
+  // Anything that changes which times exist clears the chosen time.
+  const change = (fn: () => void) => {
+    fn();
+    setSlot(undefined);
+    setNotice(null);
   };
 
-  const c = catalog.data;
-  const location = c?.locations.find((l) => l.id === draft.locationId);
-  const service = c?.services.find((s) => s.id === draft.serviceId);
-  const dentist = c?.dentists.find((d) => d.id === draft.dentistId);
-  const servicesHere = useMemo(
-    () => (c && draft.locationId ? c.services.filter((s) => dentistsFor(c, draft.locationId, s.id).length) : []),
-    [c, draft.locationId],
-  );
-  const dentistsHere = useMemo(
-    () => (c ? dentistsFor(c, draft.locationId, draft.serviceId) : []),
-    [c, draft.locationId, draft.serviceId],
-  );
-  const when = (slot: TimeOption) =>
-    `${formatClinicDate(slot.startsAt, 'en-GB', false)}, ${formatClinicTime(slot.startsAt)} (${ethiopianTime(slot.startsAt, localLang)})`;
-
-  // ---- details form --------------------------------------------------------
-  const form = useForm<Details>({ resolver: zodResolver(detailsSchema), defaultValues: { fullName: '', phone: '', notes: '' } });
+  // ---- submit ----------------------------------------------------------------
+  const form = useForm<Details>({ resolver: zodResolver(schema), defaultValues: { fullName: '', phone: '', notes: '' } });
   const [captcha, setCaptcha] = useState<string | null>(null);
   const [captchaKey, setCaptchaKey] = useState(0);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -113,7 +133,10 @@ export default function BookingWizard() {
     mutationFn: createBooking,
     onSuccess: (res, vars) => {
       setResult({ res, phone: vars.phone });
-      goto('done');
+      requestAnimationFrame(() => {
+        doneRef.current?.focus();
+        doneRef.current?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+      });
     },
     onError: (e) => {
       const code = e instanceof ApiError ? e.code : 'SERVER_ERROR';
@@ -121,10 +144,9 @@ export default function BookingWizard() {
       setCaptchaKey((k) => k + 1); // a Turnstile token is single-use
       if (code === 'SLOT_UNAVAILABLE') {
         void qc.invalidateQueries({ queryKey: ['slots'] });
-        void qc.invalidateQueries({ queryKey: ['dates'] });
-        setDraft((d) => ({ ...d, slot: undefined }));
+        setSlot(undefined);
         setNotice(t('booking.errors.SLOT_UNAVAILABLE'));
-        goto('time');
+        timesRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' });
         return;
       }
       if (code === 'INVALID_NAME' || (code === 'VALIDATION' && JSON.stringify((e as ApiError).details ?? '').includes('fullName'))) {
@@ -136,55 +158,63 @@ export default function BookingWizard() {
     },
   });
 
-  const onSubmit = form.handleSubmit((v) => {
-    setSubmitError(null);
-    if (!captcha) {
-      setSubmitError(t('booking.errors.captcha'));
-      return;
-    }
-    const phone = normalizeEthiopianPhone(v.phone);
-    if (!phone.ok || !draft.locationId || !draft.serviceId || !draft.slot) return;
-    mutation.mutate({
-      locationId: draft.locationId,
-      serviceId: draft.serviceId,
-      dentistId: draft.dentistId === 'any' ? null : draft.dentistId,
-      startsAt: draft.slot.startsAt,
-      fullName: v.fullName,
-      phone: phone.e164,
-      notes: v.notes || undefined,
-      turnstileToken: captcha,
-      website: v.website || undefined,
-    });
-  });
+  const onSubmit = form.handleSubmit(
+    (v) => {
+      setSubmitError(null);
+      if (!slot) {
+        setSlotError(true);
+        timesRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        return;
+      }
+      if (!captcha) {
+        setSubmitError(t('booking.errors.captcha'));
+        return;
+      }
+      const phone = normalizeEthiopianPhone(v.phone);
+      if (!phone.ok || !locationId || !serviceId) return;
+      mutation.mutate({
+        locationId,
+        serviceId,
+        dentistId,
+        startsAt: slot.startsAt,
+        fullName: v.fullName,
+        phone: phone.e164,
+        notes: v.notes || undefined,
+        turnstileToken: captcha,
+        website: v.website || undefined,
+      });
+    },
+    () => setSlotError(!slot),
+  );
 
-  // ---- render --------------------------------------------------------------
+  // ---- render ----------------------------------------------------------------
   if (catalog.isLoading || (c && !ready)) {
-    return <p className="text-ink-soft" aria-live="polite">{t('booking.loading')}</p>;
+    return <p className="text-center text-ink-soft" aria-live="polite">{t('booking.loading')}</p>;
   }
   if (catalog.isError || !c) return <ErrorLine onRetry={() => catalog.refetch()} />;
 
-  if (step === 'done' && result) {
+  if (result) {
     const confirmed = result.res.appointment.status === 'confirmed';
     const bookedDentist = c.dentists.find((d) => d.id === result.res.appointment.dentistId);
     const at = result.res.appointment.startsAt;
     return (
-      <section aria-labelledby="done-h" className="max-w-2xl">
+      <section aria-labelledby="done-h" className="mx-auto max-w-[35rem]">
         <span className="flex size-14 items-center justify-center rounded-full bg-gradient-to-br from-sky to-roha-700 text-white shadow-[0_10px_24px_-12px_rgb(22_52_114/0.7)]" aria-hidden="true">
           <Icon name="check" className="size-7" />
         </span>
-        <h2 id="done-h" ref={headingRef} tabIndex={-1} className="mt-6 scroll-mt-32 text-h2 outline-none">
+        <h2 id="done-h" ref={doneRef} tabIndex={-1} className="mt-6 scroll-mt-32 text-h2 outline-none">
           {t(confirmed ? 'booking.done.confirmedTitle' : 'booking.done.pendingTitle')}
         </h2>
         <p className="mt-3 text-lede text-ink-soft">
           {t(confirmed ? 'booking.done.confirmedBody' : 'booking.done.pendingBody', { phone: formatEthiopianPhone(result.phone) })}
         </p>
-        <dl className="rounded-card mt-8 grid gap-4 bg-white p-6 ring-1 ring-line sm:grid-cols-2">
+        <dl className="mt-8 grid gap-4 rounded-card bg-page p-6 ring-1 ring-line sm:grid-cols-2">
           <Fact label={t('booking.steps.time')}>
             {formatClinicDate(at)}, {formatClinicTime(at)}
             <span className="block text-sm font-medium text-ink-soft">{ethiopianTime(at, localLang)}</span>
           </Fact>
-          <Fact label={t('booking.steps.location')}>{location?.city}</Fact>
-          <Fact label={t('booking.steps.service')}>{service?.name}</Fact>
+          <Fact label={t('booking.form.branch')}>{location?.city}</Fact>
+          <Fact label={t('booking.form.treatment')}>{service?.slug === NOT_SURE ? t('booking.form.notSure') : service?.name}</Fact>
           <Fact label={t('booking.steps.dentist')}>{bookedDentist?.full_name}</Fact>
         </dl>
         <p className="mt-4 text-sm text-ink-soft">{t('booking.details.payNote')}</p>
@@ -199,261 +229,168 @@ export default function BookingWizard() {
     );
   }
 
-  const stepIndex = STEPS.indexOf(step as (typeof STEPS)[number]);
-
+  const err = form.formState.errors;
   return (
-    <div className="max-w-3xl">
-      <div className="min-w-0">
-        <p className="sr-only">{t('booking.stepOf', { step: stepIndex + 1, total: STEPS.length })}</p>
-        <ol className="grid grid-cols-3 gap-2" aria-hidden="true">
-          {STEPS.map((s, i) => (
-            <li key={s} className={`text-sm ${i === stepIndex ? 'font-medium text-roha-700' : i < stepIndex ? 'text-roha-600' : 'text-subtle'}`}>
-              <span className={`mb-2 block h-1 rounded-full transition-colors duration-500 ${i <= stepIndex ? 'bg-gradient-to-r from-sky to-roha-700' : 'bg-mist'}`} />
-              {t(STEP_LABEL[s])}
-            </li>
-          ))}
-        </ol>
+    <form onSubmit={onSubmit} noValidate className="relative mx-auto grid max-w-[35rem] gap-x-6.5 gap-y-6 sm:grid-cols-2">
+      <Fld id="fullName" label={t('booking.details.name')}
+        error={err.fullName?.message && t(`booking.errors.${err.fullName.message}`)}>
+        <input id="fullName" autoComplete="name" maxLength={100} placeholder={t('booking.form.namePlaceholder')} className="fld"
+          aria-invalid={!!err.fullName} aria-describedby={err.fullName ? 'fullName-error' : undefined} {...form.register('fullName')} />
+      </Fld>
+      <Fld id="phone" label={t('booking.details.phone')}
+        error={err.phone?.message && t(`booking.errors.${err.phone.message}`)}>
+        <input id="phone" type="tel" inputMode="tel" autoComplete="tel" placeholder="09xx xxx xxx" maxLength={20}
+          className="fld tabular-nums" aria-invalid={!!err.phone} aria-describedby={err.phone ? 'phone-error' : undefined}
+          {...form.register('phone')} />
+      </Fld>
 
-        {notice && (
-          <p role="alert" className="mt-6 rounded-lg border border-adey bg-adey-soft px-4 py-3 font-medium text-roha-900">{notice}</p>
-        )}
+      <Fld id="service" label={t('booking.form.treatment')}>
+        <select id="service" className="fld" value={serviceId}
+          onChange={(e) => change(() => setServiceId(e.target.value))}>
+          {!notSure && <option value="" disabled>{t('booking.form.pickTreatment')}</option>}
+          {notSure && <option value={notSure.id}>{t('booking.form.notSure')}</option>}
+          {treatments.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+        </select>
+      </Fld>
+      <Fld id="branch" label={t('booking.form.branch')}>
+        <select id="branch" className="fld" value={locationId}
+          onChange={(e) => change(() => {
+            const id = e.target.value;
+            setLocationId(id);
+            if (serviceId && !dentistsFor(c, id, serviceId).length) setServiceId(notSure?.id ?? '');
+            if (dentist && !dentist.location_ids.includes(id)) setDentistId(null);
+          })}>
+          {c.locations.map((l) => <option key={l.id} value={l.id}>{l.city}</option>)}
+        </select>
+      </Fld>
 
-        {step === 'choose' && (
-          <StepShell title={t('booking.choose.title')} headingRef={headingRef}>
-            {c.locations.length > 1 && (
-              <>
-                <h3 className="mb-3 font-display text-lg font-medium text-ink">{t('booking.choose.clinic')}</h3>
-                <Pills
-                  items={c.locations.map((l) => ({ id: l.id, title: l.city }))}
-                  selected={draft.locationId}
-                  onSelect={(id) => {
-                    const keepService = draft.serviceId && dentistsFor(c, id, draft.serviceId).length;
-                    setDraft({ locationId: id, serviceId: keepService ? draft.serviceId : undefined, dentistId: 'any' });
-                  }}
-                />
-              </>
-            )}
-            <h3 className={`mb-3 font-display text-lg font-medium text-ink ${c.locations.length > 1 ? 'mt-9' : ''}`}>{t('booking.choose.treatment')}</h3>
-            {!draft.locationId ? (
-              <p className="text-ink-soft">{t('booking.choose.pickClinic')}</p>
-            ) : (
-              <>
-                <Choices
-                  items={servicesHere.map((s) => ({
-                    id: s.id, title: s.name, meta: t('common.minutes', { count: s.duration_minutes }),
-                  }))}
-                  selected={draft.serviceId}
-                  onSelect={(id) => {
-                    setDraft((d) => ({ ...d, serviceId: id, dentistId: 'any', date: undefined, slot: undefined }));
-                    goto('time');
-                  }}
-                />
-                <p className="mt-4 text-sm">{t('booking.service.hint')}</p>
-              </>
-            )}
-          </StepShell>
-        )}
+      <Fld id="date" label={t('booking.form.date')} className="sm:col-span-2">
+        <input id="date" type="date" className="fld" min={today} max={lastDay} value={date} required
+          onChange={(e) => change(() => setDate(e.target.value))} />
+      </Fld>
 
-        {step === 'time' && draft.locationId && draft.serviceId && (
-          <StepShell title={t('booking.time.title')} headingRef={headingRef} onBack={() => goto('choose')}>
-            {dentistsHere.length === 0 ? (
-              <p className="text-ink-soft">{t('booking.dentist.none')}</p>
-            ) : (
-              <>
-                <Picked onChange={() => goto('choose')}>{service?.name} · {location?.city}</Picked>
-                {dentistsHere.length > 1 && (
-                  <label className="mb-6 flex flex-wrap items-center gap-3">
-                    <span className="font-medium text-ink">{t('booking.time.dentist')}</span>
-                    <select className="input w-full py-2.5 sm:w-auto sm:min-w-64" value={draft.dentistId}
-                      onChange={(e) => setDraft((d) => ({ ...d, dentistId: e.target.value, date: undefined, slot: undefined }))}>
-                      <option value="any">{t('booking.dentist.any')}</option>
-                      {dentistsHere.map((d) => <option key={d.id} value={d.id}>{d.full_name}{d.title ? ` · ${d.title}` : ''}</option>)}
-                    </select>
-                  </label>
+      {dentist && (
+        <p className="-mt-2 text-sm text-ink-soft sm:col-span-2">
+          {t('booking.form.with', { name: dentist.full_name })}{' '}
+          <button type="button" className="link text-sm" onClick={() => change(() => setDentistId(null))}>
+            {t('booking.dentist.any')}
+          </button>
+        </p>
+      )}
+
+      {/* Times for the chosen day */}
+      <div ref={timesRef} className="scroll-mt-28 sm:col-span-2" aria-live="polite">
+        {date && (
+          <div className="animate-in fade-in slide-in-from-bottom-2 duration-500">
+            <p className="text-xs text-subtle">{t('booking.form.time')}</p>
+            {notice && <p role="alert" className="mt-2 rounded-lg border border-adey bg-adey-soft px-4 py-3 font-medium text-roha-900">{notice}</p>}
+            {!canLoad ? (
+              <p className="mt-2 text-ink-soft">{t('booking.form.pickTreatment')}</p>
+            ) : slots.isLoading ? (
+              <TimesSkeleton />
+            ) : slots.isError ? (
+              <ErrorLine onRetry={() => slots.refetch()} />
+            ) : total === 0 ? (
+              <div className="mt-2 text-ink-soft">
+                <p>{t('booking.time.noSlots', { phone: location?.phone ?? '' })}</p>
+                {nextDay && (
+                  <button type="button" className="btn-ghost mt-3 min-h-10 px-4 text-sm"
+                    onClick={() => change(() => setDate(nextDay))}>
+                    {t('booking.form.nextFree', { day: formatClinicDate(`${nextDay}T12:00:00+03:00`, 'en-GB', false) })}
+                  </button>
                 )}
-                <TimePicker
-                  key={draft.dentistId}
-                  locationId={draft.locationId}
-                  serviceId={draft.serviceId}
-                  dentistId={draft.dentistId === 'any' ? null : draft.dentistId}
-                  maxAdvanceDays={c.settings.max_advance_days}
-                  clinicPhone={location?.phone ?? ''}
-                  date={draft.date}
-                  onDate={(date) => setDraft((d) => ({ ...d, date, slot: undefined }))}
-                  value={draft.slot}
-                  onChange={(slot) => {
-                    setNotice(null);
-                    setDraft((d) => ({ ...d, slot }));
-                    goto('details');
-                  }}
-                />
-              </>
+              </div>
+            ) : (
+              (['morning', 'afternoon', 'evening'] as const).map((part) =>
+                groups[part].length ? (
+                  <fieldset key={part} className="mt-3">
+                    <legend className="text-sm font-medium text-ink">{t(`booking.time.${part}`)}</legend>
+                    <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-4">
+                      {groups[part].map((o) => {
+                        const on = slot?.startsAt === o.startsAt;
+                        return (
+                          <button key={o.startsAt} type="button" aria-pressed={on}
+                            onClick={() => { setSlot(o); setSlotError(false); setNotice(null); }}
+                            className={`flex min-h-13 flex-col items-center justify-center rounded-full border leading-tight tabular-nums transition-[background-color,border-color,color,transform] duration-300 active:scale-[0.97] ${
+                              on
+                                ? 'border-transparent bg-[linear-gradient(100deg,var(--color-sky),var(--color-roha-700)_85%)] text-white shadow-[0_10px_24px_-14px_rgb(22_52_114/0.8)]'
+                                : 'border-line bg-white text-ink hover:border-sky'
+                            }`}>
+                            <span className="text-[0.9375rem] font-medium">{formatClinicTime(o.startsAt)}</span>
+                            <span className={`text-[0.6875rem] ${on ? 'text-white/80' : 'text-subtle'}`}>{ethiopianTime(o.startsAt, localLang)}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </fieldset>
+                ) : null,
+              )
             )}
-          </StepShell>
+          </div>
         )}
-
-        {step === 'details' && draft.slot && (
-          <StepShell title={t('booking.details.title')} headingRef={headingRef} onBack={() => goto('time')}>
-            {/* What they are booking — always above the button, also on phones */}
-            <div className="mb-8 flex max-w-xl items-start justify-between gap-4 rounded-card bg-page p-5 ring-1 ring-line">
-              <div>
-                <p className="font-display text-lg font-medium text-ink">{when(draft.slot)}</p>
-                <p className="mt-1 text-[0.9375rem]">
-                  {service?.name} · {location?.city} · {draft.dentistId === 'any' ? t('booking.dentist.any') : dentist?.full_name}
-                </p>
-              </div>
-              <button type="button" onClick={() => goto('time')} className="link shrink-0 text-sm">
-                {t('booking.change')}
-              </button>
-            </div>
-
-            <form onSubmit={onSubmit} noValidate className="max-w-xl space-y-5">
-              <Field id="fullName" label={t('booking.details.name')}
-                error={form.formState.errors.fullName?.message && t(`booking.errors.${form.formState.errors.fullName.message}`)}>
-                <input id="fullName" autoComplete="name" maxLength={100} className="input" aria-invalid={!!form.formState.errors.fullName}
-                  aria-describedby={form.formState.errors.fullName ? 'fullName-error' : undefined} {...form.register('fullName')} />
-              </Field>
-              <Field id="phone" label={t('booking.details.phone')} hint={t('booking.details.phoneHint')}
-                error={form.formState.errors.phone?.message && t(`booking.errors.${form.formState.errors.phone.message}`)}>
-                <input id="phone" type="tel" inputMode="tel" autoComplete="tel" placeholder="0911 234 567" maxLength={20}
-                  className="input tabular-nums" aria-invalid={!!form.formState.errors.phone}
-                  aria-describedby={`phone-hint${form.formState.errors.phone ? ' phone-error' : ''}`} {...form.register('phone')} />
-              </Field>
-              {showNotes ? (
-                <Field id="notes" label={t('booking.details.notes')} hint={t('booking.details.notesHint')}>
-                  <textarea id="notes" aria-describedby="notes-hint" rows={3} maxLength={500} className="input" autoFocus {...form.register('notes')} />
-                </Field>
-              ) : (
-                <button type="button" onClick={() => setShowNotes(true)} className="inline-flex min-h-11 items-center gap-2 text-[0.9375rem] font-medium text-roha-700 hover:underline">
-                  <Icon name="plus" className="size-4" /> {t('booking.details.addNote')}
-                </button>
-              )}
-              {/* Honeypot — hidden from people and screen readers */}
-              <div aria-hidden="true" className="absolute -left-[9999px] h-0 overflow-hidden">
-                <label htmlFor="website">Website</label>
-                <input id="website" tabIndex={-1} autoComplete="off" {...form.register('website')} />
-              </div>
-
-              <div aria-label={t('booking.details.captcha')}>
-                <Turnstile key={captchaKey} onToken={setCaptcha} />
-              </div>
-
-              {submitError && (
-                <p role="alert" className="rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-red-900">{submitError}</p>
-              )}
-
-              <button type="submit" className="btn-primary w-full text-[1.0625rem] sm:w-auto sm:px-10" disabled={mutation.isPending}>
-                {mutation.isPending ? t('booking.details.submitting') : t('booking.details.submit')}
-              </button>
-              <p className="text-sm text-ink-soft">{t('booking.details.payNote')}</p>
-            </form>
-          </StepShell>
+        {slotError && !slot && (
+          <p role="alert" className="mt-2 text-sm font-medium text-red-800">
+            {t(date ? 'booking.form.pickTime' : 'booking.form.pickDate')}
+          </p>
         )}
       </div>
 
-    </div>
+      <div className="sm:col-span-2">
+        {showNotes ? (
+          <Fld id="notes" label={t('booking.details.notes')}>
+            <textarea id="notes" rows={2} maxLength={500} className="fld resize-none" autoFocus
+              placeholder={t('booking.details.notesHint')} {...form.register('notes')} />
+          </Fld>
+        ) : (
+          <button type="button" onClick={() => setShowNotes(true)} className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-roha-700 hover:underline">
+            <Icon name="plus" className="size-4" /> {t('booking.details.addNote')}
+          </button>
+        )}
+      </div>
+
+      {/* Honeypot — hidden from people and screen readers */}
+      <div aria-hidden="true" className="absolute -left-[9999px] h-0 overflow-hidden">
+        <label htmlFor="website">Website</label>
+        <input id="website" tabIndex={-1} autoComplete="off" {...form.register('website')} />
+      </div>
+
+      <div className="sm:col-span-2" aria-label={t('booking.details.captcha')}>
+        <Turnstile key={captchaKey} onToken={setCaptcha} />
+      </div>
+
+      {submitError && (
+        <p role="alert" className="rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-red-900 sm:col-span-2">{submitError}</p>
+      )}
+
+      <div className="flex flex-wrap items-center gap-5 sm:col-span-2">
+        <button type="submit" className="btn-primary pl-2" disabled={mutation.isPending}>
+          <span className="btn-ic bg-white/20 text-white"><ArrowRight className="size-4" /></span>
+          {mutation.isPending ? t('booking.details.submitting') : t('booking.form.send')}
+        </button>
+        <small className="max-w-[30ch] text-xs text-subtle">{t('booking.details.payNote')}</small>
+      </div>
+    </form>
   );
 }
 
 // ---- small pieces ------------------------------------------------------------
 
-function StepShell(props: {
-  title: string; children: React.ReactNode; onBack?: () => void;
-  headingRef: React.RefObject<HTMLHeadingElement | null>;
-}) {
-  const { t } = useTranslation();
-  return (
-    <section className="mt-9 scroll-mt-24">
-      {props.onBack && (
-        <button type="button" onClick={props.onBack} className="mb-3 text-sm font-medium text-roha-600 hover:underline">
-          ‹ {t('booking.back')}
-        </button>
-      )}
-      <h2 ref={props.headingRef} tabIndex={-1} className="scroll-mt-32 font-display text-[clamp(1.625rem,3vw,2.25rem)] leading-tight outline-none">{props.title}</h2>
-      <div className="mt-6">{props.children}</div>
-    </section>
-  );
-}
-
-/** Treatments: one compact row each (name + length). */
-function Choices({ items, selected, onSelect }: {
-  items: { id: string; title: string; meta?: string }[];
-  selected?: string;
-  onSelect: (id: string) => void;
+function Fld({ id, label, error, className = '', children }: {
+  id: string; label: string; error?: string | false; className?: string; children: React.ReactNode;
 }) {
   return (
-    <ul className="grid gap-2 sm:grid-cols-2">
-      {items.map((i) => {
-        const on = i.id === selected;
-        return (
-          <li key={i.id}>
-            <button
-              type="button"
-              aria-pressed={on}
-              onClick={() => onSelect(i.id)}
-              className={`flex min-h-14 w-full items-center justify-between gap-4 rounded-card border px-4 py-3 text-left transition-colors ${
-                on ? 'border-roha-700 bg-roha-50 ring-1 ring-roha-700' : 'border-line bg-white hover:border-sky'
-              }`}
-            >
-              <span className="font-medium text-ink">{i.title}</span>
-              {i.meta && <span className="shrink-0 text-sm tabular-nums text-roha-600">{i.meta}</span>}
-            </button>
-          </li>
-        );
-      })}
-    </ul>
-  );
-}
-
-/** Clinics: a short row of pills. */
-function Pills({ items, selected, onSelect }: {
-  items: { id: string; title: string }[];
-  selected?: string;
-  onSelect: (id: string) => void;
-}) {
-  return (
-    <div className="flex flex-wrap gap-2">
-      {items.map((i) => {
-        const on = i.id === selected;
-        return (
-          <button
-            key={i.id}
-            type="button"
-            aria-pressed={on}
-            onClick={() => onSelect(i.id)}
-            className={`inline-flex min-h-12 items-center gap-2 rounded-full border px-5 font-medium transition-colors ${
-              on ? 'border-roha-700 bg-roha-700 text-white' : 'border-line bg-white text-ink hover:border-sky'
-            }`}
-          >
-            {on && <Icon name="check" className="size-4" />}
-            {i.title}
-          </button>
-        );
-      })}
+    <div className={`grid min-w-0 content-start gap-1 ${className}`}>
+      <label htmlFor={id} className="text-xs text-subtle">{label}</label>
+      {children}
+      {error && <p id={`${id}-error`} role="alert" className="text-sm font-medium text-red-800">{error}</p>}
     </div>
   );
 }
 
-/** One line recalling an earlier choice, with a way back. */
-function Picked({ children, onChange }: { children: React.ReactNode; onChange: () => void }) {
-  const { t } = useTranslation();
+function TimesSkeleton() {
   return (
-    <p className="mb-6 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-card bg-page px-4 py-2.5 text-[0.9375rem] text-ink ring-1 ring-line sm:inline-flex sm:rounded-full">
-      <span>{children}</span>
-      <button type="button" onClick={onChange} className="link text-sm">{t('booking.change')}</button>
-    </p>
-  );
-}
-
-function Field({ id, label, hint, error, children }: {
-  id: string; label: string; hint?: string; error?: string | false; children: React.ReactNode;
-}) {
-  return (
-    <div>
-      <label htmlFor={id} className="block font-medium text-ink">{label}</label>
-      {hint && <p id={`${id}-hint`} className="text-sm text-ink-soft">{hint}</p>}
-      <div className="mt-2">{children}</div>
-      {error && <p id={`${id}-error`} role="alert" className="mt-1.5 text-sm font-medium text-red-800">{error}</p>}
+    <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-4" aria-busy="true">
+      {Array.from({ length: 8 }, (_, i) => <span key={i} className="h-13 animate-pulse rounded-full bg-mist" />)}
     </div>
   );
 }

@@ -4,7 +4,7 @@ import { Seo } from '../lib/seo';
 import { breadcrumbLd } from '../lib/schema';
 import { bookingConfigured } from '../lib/api';
 import { locations } from '../content/locations';
-import { PageIntro } from '../components/PageIntro';
+import { stagger } from '../lib/useReveal';
 import { LocationPanel } from '../components/LocationPanel';
 
 // Loaded only in the browser, so the wizard's code stays out of every other page.
@@ -26,13 +26,12 @@ export default function Book() {
         path="/book"
         jsonLd={[breadcrumbLd(crumbs)]}
       />
-      <PageIntro
-        crumbs={crumbs}
-        compact
-        title="Book an appointment"
-        lede="Choose a clinic, treatment and time. We confirm by SMS, and you pay at the clinic."
-      />
-      <div className="wrap mt-10">
+      <header className="wrap pt-[clamp(2.5rem,6vw,4.5rem)] text-center">
+        <p data-reveal className="text-xs font-medium tracking-[0.14em] text-roha-700 uppercase">{t('booking.form.eyebrow')}</p>
+        <h1 data-reveal style={stagger(1)} className="mt-4 text-h2">{t('booking.form.title')}</h1>
+        <p data-reveal style={stagger(2)} className="mx-auto mt-4 max-w-[52ch]">{t('booking.form.lede')}</p>
+      </header>
+      <div className="wrap mt-[clamp(2rem,5vw,3.5rem)]">
         {mounted && bookingConfigured ? (
           <Suspense fallback={<p className="text-ink-soft">{t('booking.loading')}</p>}>
             <BookingWizard />

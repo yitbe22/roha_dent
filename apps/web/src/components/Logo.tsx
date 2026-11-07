@@ -1,10 +1,21 @@
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
+import { playIntro } from '../lib/intro';
 
-/** The clinic's mark + wordmark. */
+/** The clinic's mark + wordmark. Going home plays the intro transition (logo lifts, white wipe). */
 export function Logo({ tone = 'blue', to = '/' }: { tone?: 'blue' | 'white'; to?: string }) {
   const white = tone === 'white';
+  const navigate = useNavigate();
   return (
-    <Link to={to} className={`flex items-center gap-2.5 ${white ? 'text-white' : 'text-ink'}`} aria-label="Roha Speciality Dental Center, home">
+    <Link
+      to={to}
+      className={`flex items-center gap-2.5 ${white ? 'text-white' : 'text-ink'}`}
+      aria-label="Roha Speciality Dental Center, home"
+      onClick={(e) => {
+        if (to !== '/' || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+        e.preventDefault();
+        playIntro(() => navigate('/'));
+      }}
+    >
       <img
         src={white ? '/img/logo-white.png' : '/img/logo.png'}
         alt=""

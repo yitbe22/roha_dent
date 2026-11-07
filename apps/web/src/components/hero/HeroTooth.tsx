@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
+import { INTRO_MS } from '../../lib/intro';
 
 const DESKTOP = '(min-width: 1024px) and (pointer: fine)';
-const INTRO_MS = 1500; // same as the #loader timing in styles.css
 
 /** True only for hardware-accelerated WebGL; software renderers can't animate the glass smoothly. */
 function hasFastWebGL() {

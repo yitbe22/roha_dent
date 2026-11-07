@@ -57,7 +57,7 @@ set local role anon;
 select set_config('request.jwt.claims', '{"role":"anon"}', true);
 
 select is((select count(*)::int from public.locations), 2, 'anon sees active locations');
-select is((select count(*)::int from public.services), 7, 'anon sees only active services');
+select is((select count(*)::int from public.services), 8, 'anon sees only active services');
 select ok((select count(*) from public.dentists) = 4, 'anon sees active dentists');
 select ok((select count(*) from public.working_hours) > 0, 'anon sees working hours');
 select throws_ok('select * from public.patients',      '42501', null, 'anon cannot read patients');

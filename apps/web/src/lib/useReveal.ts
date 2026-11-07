@@ -1,6 +1,6 @@
 import { useEffect, type CSSProperties } from 'react';
 
-const INTRO_MS = 1500; // matches the #loader timing in styles.css
+import { INTRO_MS } from './intro';
 
 /**
  * Fades [data-reveal] blocks in as they scroll into view. Stagger with style={{ '--d': n }}.
