@@ -14,7 +14,7 @@ export function CtaBand({ title = 'Ready when you are', body, bookTo = '/book' }
           className="pointer-events-none absolute -right-8 -bottom-16 -z-10 w-60 opacity-[0.07] sm:w-80" />
         <div className="grid items-center gap-8 lg:grid-cols-[1.3fr_1fr]">
           <div>
-            <h2 className="text-h2 max-w-[16ch] text-white">{title}</h2>
+            <h2 className="before:mb-5 before:block before:h-0.5 before:w-7 before:rounded-full before:bg-adey before:content-[''] text-h2 max-w-[16ch] text-white">{title}</h2>
             <p className="mt-4 max-w-[44ch] text-white/85">
               {body ?? 'Pick a time online in about a minute, and we confirm it by SMS. Prefer to talk? Call either clinic.'}
             </p>

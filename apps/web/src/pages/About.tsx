@@ -50,7 +50,7 @@ export default function About() {
             {commitments.map(([title, body], i) => (
               <div key={title} data-reveal style={stagger(i + 1)}
                 className="border-t border-white/25 py-6 lg:border-t-0 lg:border-l lg:px-6 lg:py-1 lg:first:border-l-0 lg:first:pl-0">
-                <dt className="font-display text-xl leading-tight text-white">{title}</dt>
+                <dt className="before:mb-5 before:block before:h-0.5 before:w-7 before:rounded-full before:bg-adey before:content-[''] font-display text-xl leading-tight text-white">{title}</dt>
                 <dd className="mt-3 text-[0.9375rem] text-white/85">{body}</dd>
               </div>
             ))}

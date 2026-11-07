@@ -11,6 +11,7 @@ import { LocationPanel } from '../components/LocationPanel';
 import { TreatmentGrid } from '../components/TreatmentGrid';
 import { CalendarDays, MapPin } from 'lucide-react';
 import { Monogram } from '../components/Monogram';
+import { HeroTooth } from '../components/hero/HeroTooth';
 import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { stagger } from '../lib/useReveal';
@@ -62,21 +63,13 @@ export default function Home() {
             <ul data-reveal style={stagger(3)} className="mt-9 flex flex-wrap gap-2" aria-label="Clinics">
               {locations.map((l) => (
                 <li key={l.slug}>
-                  <Link to={`/locations/${l.slug}`} className="chip block hover:border-sky">{l.city}</Link>
+                  <Link to={`/locations/${l.slug}`} className="chip inline-flex items-center gap-2 hover:border-sky"><span className="size-1.5 rounded-full bg-adey" aria-hidden="true" />{l.city}</Link>
                 </li>
               ))}
             </ul>
           </div>
-          <div data-reveal style={stagger(2)} className="relative isolate">
-            
-            <img
-              src="/img/clinic-room.webp"
-              alt="A Roha treatment room with a blue and white dental chair"
-              width={667}
-              height={889}
-              fetchPriority="high"
-              className="aspect-[4/3] w-full rounded-panel object-cover sm:aspect-[5/4] lg:ml-auto lg:aspect-[4/5] lg:max-w-[30rem]"
-            />
+          <div data-reveal style={stagger(2)} className="-mt-4 lg:mt-0">
+            <HeroTooth />
           </div>
         </div>
       </section>
@@ -99,7 +92,7 @@ export default function Home() {
               <div key={f.label} data-reveal style={stagger(i + 2)}
                 className="flex flex-col-reverse justify-end border-white/15 px-[clamp(1.25rem,3vw,2.75rem)] py-6 odd:border-r max-lg:nth-[n+3]:border-t lg:border-r lg:last:border-r-0 sm:py-8">
                 <dt className="mt-2 max-w-[22ch] text-sm text-white/80">{f.label}</dt>
-                <dd className="font-display text-[clamp(1.625rem,3.6vw,3rem)] leading-none font-medium tracking-[-0.03em] whitespace-nowrap tabular-nums">{f.value}</dd>
+                <dd className="before:mb-5 before:block before:h-0.5 before:w-7 before:rounded-full before:bg-adey before:content-[''] font-display text-[clamp(1.625rem,3.6vw,3rem)] leading-none font-medium tracking-[-0.03em] whitespace-nowrap tabular-nums">{f.value}</dd>
               </div>
             ))}
           </dl>
@@ -153,7 +146,7 @@ export default function Home() {
               ['Get the SMS', 'We text you when we receive the request and again when it is confirmed.'],
             ].map(([title, body], i) => (
               <li key={title} className="border-t border-white/25 py-6 sm:border-t-0 sm:border-l sm:px-6 sm:py-1 sm:first:border-l-0 sm:first:pl-0">
-                <span className="font-display text-[3.5rem] leading-none font-medium tracking-[-0.04em] text-sky-soft tabular-nums">{i + 1}</span>
+                <span className="font-display text-[3.5rem] leading-none font-medium tracking-[-0.04em] text-adey tabular-nums">{i + 1}</span>
                 <h3 className="mt-6 text-h3 text-white">{title}</h3>
                 <p className="mt-2 text-[0.9375rem] text-white/85">{body}</p>
               </li>

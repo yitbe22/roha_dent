@@ -39,7 +39,7 @@ export function TreatmentGrid({ headingLevel = 'h3' }: { headingLevel?: 'h2' | '
           to="/book?service=scaling"
           className="group on-blue flex min-h-60 flex-col rounded-card bg-roha-700 p-6 text-white transition-[box-shadow,transform] duration-300 ease-out-soft hover:-translate-y-1 hover:shadow-[0_18px_40px_-20px_rgb(15_35_80/0.7)]"
         >
-          <span className="grid size-9 place-items-center self-end rounded-full bg-white text-roha-700" aria-hidden="true">
+          <span className="grid size-9 place-items-center self-end rounded-full bg-adey text-roha-900 transition-transform duration-300 group-hover:rotate-45" aria-hidden="true">
             <ArrowUpRight className="size-4" />
           </span>
           <H className="mt-auto pt-10 font-display text-[1.375rem] leading-tight text-white">Not sure what you need?</H>

@@ -111,11 +111,11 @@ function Footer() {
               <h2 className="text-sm font-medium tracking-normal text-white/80">{l.city}</h2>
               <ul className="mt-3 space-y-1.5 text-white/85">
                 <li>
-                  <a href={`tel:${l.phoneE164}`} className="font-display text-xl text-white hover:underline">{l.phoneDisplay}</a>
+                  <a href={`tel:${l.phoneE164}`} className="font-display text-xl text-white decoration-adey decoration-2 underline-offset-4 hover:underline">{l.phoneDisplay}</a>
                 </li>
                 {l.hoursText.map((h) => <li key={h} className="text-[0.9375rem]">{h}</li>)}
                 <li className="pt-1">
-                  <Link to={`/locations/${l.slug}`} className="text-[0.9375rem] text-white underline decoration-white/40 underline-offset-4 hover:decoration-white">
+                  <Link to={`/locations/${l.slug}`} className="text-[0.9375rem] text-white underline decoration-white/40 underline-offset-4 hover:decoration-adey">
                     {t('cta.viewClinic')}
                   </Link>
                 </li>
@@ -128,17 +128,17 @@ function Footer() {
             <h2 className="text-sm font-medium tracking-normal text-white/80">{t('footer.explore')}</h2>
             <ul className="mt-3 space-y-1.5 text-[0.9375rem]">
               {services.slice(0, 4).map((s) => (
-                <li key={s.slug}><Link to={`/services/${s.slug}`} className="text-white hover:underline">{s.shortName}</Link></li>
+                <li key={s.slug}><Link to={`/services/${s.slug}`} className="text-white decoration-adey decoration-2 underline-offset-4 hover:underline">{s.shortName}</Link></li>
               ))}
-              <li><Link to="/services" className="text-white hover:underline">{t('cta.allServices')}</Link></li>
+              <li><Link to="/services" className="text-white decoration-adey decoration-2 underline-offset-4 hover:underline">{t('cta.allServices')}</Link></li>
             </ul>
           </div>
           <div>
             <h2 className="text-sm font-medium tracking-normal text-white/80">{t('footer.more')}</h2>
             <ul className="mt-3 space-y-1.5 text-[0.9375rem]">
-              <li><Link to="/register" className="text-white hover:underline">{t('footer.register')}</Link></li>
-              <li><Link to="/careers" className="text-white hover:underline">{t('footer.careers')}</Link></li>
-              <li><Link to="/events" className="text-white hover:underline">{t('footer.events')}</Link></li>
+              <li><Link to="/register" className="text-white decoration-adey decoration-2 underline-offset-4 hover:underline">{t('footer.register')}</Link></li>
+              <li><Link to="/careers" className="text-white decoration-adey decoration-2 underline-offset-4 hover:underline">{t('footer.careers')}</Link></li>
+              <li><Link to="/events" className="text-white decoration-adey decoration-2 underline-offset-4 hover:underline">{t('footer.events')}</Link></li>
             </ul>
           </div>
         </div>

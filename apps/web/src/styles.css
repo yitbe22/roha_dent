@@ -16,7 +16,8 @@
   navy    #163472  brand (roha-700)  panel    #3A62A8 rounded blue panels
   sky     #3D8AF7  logo light blue: focus, underlines, button start (never body text on white)
   indigo  #22069F  logo deep blue, sparingly
-  amber (adey)     status only: "pending" / warnings in the dashboard and booking notices
+  adey    #F2C14E  Adey Abeba yellow: small accents only. On blue/navy, or as non-text marks
+                   (rules, dots, underlines). Never yellow text on white (1.7:1). Also the dashboard's "pending" colour.
 */
 @theme {
   --font-sans: 'Hanken Grotesk Variable', ui-sans-serif, system-ui, 'Noto Sans Ethiopic', 'Nyala', sans-serif;
@@ -47,6 +48,7 @@
   --color-panel-2: #4d76bd;
   --color-adey: #f2c14e;
   --color-adey-soft: #fcefcc;
+  --color-adey-deep: #d9a52e;
 
   --radius-inner: 10px;
   --radius-card: 14px;
@@ -89,7 +91,7 @@
     outline-offset: 3px;
     border-radius: 6px;
   }
-  .on-blue :focus-visible { outline-color: #fff; }
+  .on-blue :focus-visible { outline-color: var(--color-adey); }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
   }
@@ -135,7 +137,8 @@
     position: absolute;
     left: 0; right: 0; bottom: 0;
     height: 1.5px;
-    background: var(--color-sky);
+    background: var(--color-adey);
+    height: 2px;
     transform: scaleX(0);
     transform-origin: left;
     transition: transform 0.45s var(--ease-out-soft);
@@ -233,4 +236,10 @@
   --input: #dbe4f3;
   --ring: #3d8af7;              /* sky */
   --radius: 0.625rem;
+}
+
+/* Phone hero tooth: a slow float (switched off by the reduced-motion reset above) */
+@keyframes tooth-float {
+  0%, 100% { transform: translateY(0) rotate(-1.5deg); }
+  50% { transform: translateY(-10px) rotate(1.5deg); }
 }

@@ -1,0 +1,11 @@
+<!doctype html>
+<!-- Used only by scripts/render-tooth.mjs to make public/img/tooth.webp. Not part of the site. -->
+<html><body style="margin:0;background:transparent">
+<canvas id="c" style="width:900px;height:1000px;display:block"></canvas>
+<script type="module">
+  import { mountTooth } from '/src/components/hero/toothScene.ts';
+  window.devicePixelRatio = 1;
+  mountTooth(document.getElementById('c'), { still: true });
+  window.toothPng = document.getElementById('c').toDataURL('image/png');
+</script>
+</body></html>
