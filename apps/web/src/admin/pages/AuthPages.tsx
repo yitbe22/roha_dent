@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
-import { supabase } from '../supabase';
+import { callFunction, supabase } from '../supabase';
+import { errorMessage } from '../data';
 import { useAuth } from '../auth';
 import { Centered, ErrorBox, Field, btn, inputCls, useToast } from '../ui';
 
@@ -70,9 +71,15 @@ export function PasswordForm({ onDone }: { onDone?: () => void }) {
     if (pw !== pw2) return setError('The two passwords don’t match.');
     setBusy(true);
     setError(null);
-    const { error } = await supabase.auth.updateUser({ password: pw, data: { must_change_password: false } });
+    // Through the server, which enforces the length and clears the "must change password" flag.
+    try {
+      await callFunction('admin-users', { action: 'set_own_password', password: pw });
+      await supabase.auth.refreshSession(); // pick up the cleared flag
+    } catch (e) {
+      setBusy(false);
+      return setError(errorMessage(e));
+    }
     setBusy(false);
-    if (error) return setError(/same/i.test(error.message) ? 'Choose a password different from the temporary one.' : error.message);
     setPw('');
     setPw2('');
     toast('Password updated');

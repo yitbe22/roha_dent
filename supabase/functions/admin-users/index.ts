@@ -1,11 +1,13 @@
-// POST /functions/v1/admin-users   (owner only — Authorization: Bearer <user access token>)
+// POST /functions/v1/admin-users   (owner only, except set_own_password — Authorization: Bearer <user access token>)
 //   {action:"list"}                                       → staff with email + last sign-in
 //   {action:"create", email, full_name, role, location_id, phone?}  → {id, tempPassword}
 //   {action:"update", id, full_name?, role?, location_id?, phone?, is_active?}
 //   {action:"reset_password", id}                         → {tempPassword}
+//   {action:"set_own_password", password}   (any active staff member, for their own account) → {ok}
 //
 // Accounts get a temporary password the owner hands over in person; the user must change it at
-// first sign-in (user_metadata.must_change_password). No email is needed — Supabase's built-in
+// first sign-in. The flag lives in app_metadata.must_change_password, which only the service role
+// can write, and it is cleared only here, together with the password change itself. No email is needed — Supabase's built-in
 // mailer only delivers to project team members, so invite emails would not reach clinic staff.
 //
 // Profile rows are written with the OWNER's JWT (RLS + audit_log record the real actor);
@@ -38,11 +40,14 @@ const requestSchema = z.discriminatedUnion('action', [
     is_active: z.boolean().optional(),
   }),
   z.object({ action: z.literal('reset_password'), id: z.uuid() }),
+  z.object({ action: z.literal('set_own_password'), password: z.string().min(10).max(72) }),
 ]);
+
+export const MIN_PASSWORD = 10;
 
 type ErrorCode =
   | 'METHOD_NOT_ALLOWED' | 'UNAUTHORIZED' | 'FORBIDDEN' | 'VALIDATION' | 'INVALID_PHONE' | 'EMAIL_TAKEN'
-  | 'LOCATION_REQUIRED' | 'SELF_CHANGE' | 'NOT_FOUND' | 'SERVER_ERROR';
+  | 'LOCATION_REQUIRED' | 'SELF_CHANGE' | 'NOT_FOUND' | 'WEAK_PASSWORD' | 'SERVER_ERROR';
 
 const reply = (req: Request, status: number, body: unknown) =>
   new Response(JSON.stringify(body), {
@@ -70,7 +75,7 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders(req) });
   if (req.method !== 'POST') return fail(req, 405, 'METHOD_NOT_ALLOWED');
 
-  // ---- caller must be an active owner --------------------------------------------
+  // ---- caller must be an active staff member (and an owner for everything but their own password)
   const authHeader = req.headers.get('authorization') ?? '';
   const jwt = authHeader.replace(/^Bearer\s+/i, '');
   if (!jwt) return fail(req, 401, 'UNAUTHORIZED');
@@ -78,7 +83,7 @@ Deno.serve(async (req) => {
   const { data: who, error: whoErr } = await svc.auth.getUser(jwt);
   if (whoErr || !who.user) return fail(req, 401, 'UNAUTHORIZED');
   const { data: me } = await svc.from('profiles').select('role, is_active').eq('id', who.user.id).maybeSingle();
-  if (!me || !me.is_active || me.role !== 'owner') return fail(req, 403, 'FORBIDDEN');
+  if (!me || !me.is_active) return fail(req, 403, 'FORBIDDEN');
 
   const asOwner: SupabaseClient = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!, {
     global: { headers: { Authorization: `Bearer ${jwt}` } },
@@ -91,9 +96,14 @@ Deno.serve(async (req) => {
   } catch {
     return fail(req, 400, 'VALIDATION', 'Invalid JSON');
   }
+  if ((body as { action?: unknown } | null)?.action === 'set_own_password') {
+    const pw = (body as { password?: unknown }).password;
+    if (typeof pw !== 'string' || pw.length < MIN_PASSWORD) return fail(req, 400, 'WEAK_PASSWORD', `Use at least ${MIN_PASSWORD} characters.`);
+  }
   const parsed = requestSchema.safeParse(body);
   if (!parsed.success) return fail(req, 400, 'VALIDATION', parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; '));
   const input = parsed.data;
+  if (input.action !== 'set_own_password' && me.role !== 'owner') return fail(req, 403, 'FORBIDDEN');
 
   try {
     switch (input.action) {
@@ -111,7 +121,7 @@ Deno.serve(async (req) => {
               ...p,
               email: u?.email ?? null,
               last_sign_in_at: u?.last_sign_in_at ?? null,
-              must_change_password: Boolean(u?.user_metadata?.must_change_password),
+              must_change_password: Boolean(u?.app_metadata?.must_change_password),
             };
           }),
         });
@@ -126,7 +136,8 @@ Deno.serve(async (req) => {
           email: input.email,
           password,
           email_confirm: true,
-          user_metadata: { full_name: input.full_name, must_change_password: true },
+          user_metadata: { full_name: input.full_name },
+          app_metadata: { must_change_password: true },
         });
         if (error || !created.user) {
           if (/already|registered|exists/i.test(error?.message ?? '')) return fail(req, 409, 'EMAIL_TAKEN');
@@ -182,10 +193,20 @@ Deno.serve(async (req) => {
         const password = tempPassword();
         const { error } = await svc.auth.admin.updateUserById(input.id, {
           password,
-          user_metadata: { ...(target.user.user_metadata ?? {}), must_change_password: true },
+          app_metadata: { ...(target.user.app_metadata ?? {}), must_change_password: true },
         });
         if (error) throw error;
         return reply(req, 200, { tempPassword: password });
+      }
+
+      case 'set_own_password': {
+        // The only way the "must change password" flag is cleared: together with a real new password.
+        const { error } = await svc.auth.admin.updateUserById(who.user.id, {
+          password: input.password,
+          app_metadata: { ...(who.user.app_metadata ?? {}), must_change_password: false },
+        });
+        if (error) throw error;
+        return reply(req, 200, { ok: true });
       }
     }
   } catch (e) {

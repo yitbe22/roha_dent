@@ -84,7 +84,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       profile,
       profileError: profileQ.isError,
       isOwner,
-      mustChangePassword: Boolean(session?.user.user_metadata?.must_change_password),
+      // app_metadata: only the server can set or clear it (admin-users → set_own_password).
+      mustChangePassword: Boolean(session?.user.app_metadata?.must_change_password),
       scope,
       setScope,
       signOut: async () => {

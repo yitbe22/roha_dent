@@ -27,6 +27,8 @@ additional_redirect_urls = ["http://localhost:5173/admin", "https://rohadent.com
 # Staff accounts are invited by the owner — nobody can self-register.
 enable_signup = false
 jwt_expiry = 3600
+# Also set on the live project (dashboard → Authentication → Password): the dashboard asks for 10.
+minimum_password_length = 10
 
 [auth.email]
 enable_confirmations = false
