@@ -1,8 +1,8 @@
--- SMS outbox: which events queue which messages, rendering, reminders, worker claim, resend.
+-- SMS outbox: which events queue which messages, rendering, worker claim, resend.
 -- Note: the SMS trigger is DEFERRED (fires at commit). Inside this single test transaction we
 -- flush pending deferred triggers before assertions with `set constraints all immediate` (then defer again).
 begin;
-select plan(26);
+select plan(20);
 
 
 create temp table ctx as
@@ -100,34 +100,6 @@ set constraints all immediate; set constraints all deferred;
 select is((select status::text || ' / ' || error from public.sms_log where appointment_id = (select appointment_id from b2) and type = 'booking_cancelled'),
           'skipped / SMS is turned off in settings', 'disabled SMS is logged as skipped, never silent');
 update public.settings set sms_enabled = true;
-
-------------------------------------------------------------------------------
--- Reminders
-------------------------------------------------------------------------------
-create temp table r as
-select x.* from ctx, public.book_appointment(ctx.gonder, ctx.scaling, ctx.meron, pg_temp.at('15:00'), 'Reminder Test', '+251911000003') x;
--- Pretend it was booked 3 days ago, is confirmed, and starts in 20 hours.
-update public.appointments
-   set status = 'confirmed', created_at = now() - interval '3 days',
-       starts_at = date_trunc('minute', now()) + interval '20 hours', ends_at = date_trunc('minute', now()) + interval '20 hours 45 minutes'
- where id = (select appointment_id from r);
-
-set constraints all immediate; set constraints all deferred;
-select is(public.enqueue_due_reminders() >= 1, true, 'due 24h reminder is queued');
-set constraints all immediate; set constraints all deferred;
-select is(pg_temp.sms((select appointment_id from r), 'reminder_24h'), 1, '… exactly one');
-set constraints all immediate; set constraints all deferred;
-select is(public.enqueue_due_reminders(), 0, 'running again queues nothing (idempotent)');
-set constraints all immediate; set constraints all deferred;
-select is(pg_temp.sms((select appointment_id from r), 'reminder_2h'), 0, 'no 2h reminder yet');
-
-update public.appointments
-   set starts_at = date_trunc('minute', now()) + interval '90 minutes', ends_at = date_trunc('minute', now()) + interval '135 minutes'
- where id = (select appointment_id from r);
-set constraints all immediate; set constraints all deferred;
-select is(public.enqueue_due_reminders() >= 1, true, '2h reminder queued once within 2 hours');
-set constraints all immediate; set constraints all deferred;
-select is(pg_temp.sms((select appointment_id from r), 'reminder_2h'), 1, '… exactly one 2h reminder');
 
 ------------------------------------------------------------------------------
 -- Worker claim + resend

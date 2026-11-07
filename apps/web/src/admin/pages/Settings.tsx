@@ -24,13 +24,11 @@ const PLACEHOLDER_LABEL: Record<(typeof TEMPLATE_PLACEHOLDERS)[number], string> 
   local_date: 'Ethiopian date',
 };
 
-const SMS_HINT: Record<SmsType, string> = {
+const SMS_HINT: Partial<Record<SmsType, string>> = {
   booking_received: 'Sent to the patient right after an online request (or a pending phone booking).',
   booking_confirmed: 'Sent when staff confirm a booking, or when a booking is created as confirmed.',
   booking_cancelled: 'Sent when a booking is cancelled (by staff or by the patient’s link).',
   booking_rescheduled: 'Sent when the time of a booking changes.',
-  reminder_24h: 'Sent about 24 hours before a confirmed appointment.',
-  reminder_2h: 'Sent about 2 hours before a confirmed appointment.',
   clinic_new_booking: 'Sent to the clinic alert phone(s) for every new online booking.',
 };
 
@@ -102,7 +100,6 @@ function SettingsForm({ readOnly }: { readOnly: boolean }) {
       max_reschedules: s.max_reschedules,
       max_active_bookings_per_patient: s.max_active_bookings_per_patient,
       sms_enabled: s.sms_enabled,
-      reminders_enabled: s.reminders_enabled,
       public_site_url: s.public_site_url.trim().replace(/\/$/, ''),
       owner_alert_phones: [...new Set(parsed.map((p) => (p.ok ? p.e164 : '')))],
     });
@@ -146,7 +143,6 @@ function SettingsForm({ readOnly }: { readOnly: boolean }) {
       <Card title="Text messages">
         <fieldset disabled={readOnly} className="space-y-4">
           <Toggle checked={s.sms_enabled} onChange={(v) => set('sms_enabled', v)} label="Send text messages (switch off to stop all SMS)" />
-          <Toggle checked={s.reminders_enabled} onChange={(v) => set('reminders_enabled', v)} label="Send reminders the day before and 2 hours before" />
           <Field label="Extra phones for new-booking alerts" error={badPhone ? 'Each number must be an Ethio Telecom 09… mobile.' : null}
             hint="These numbers get an SMS for every website booking at both clinics (each clinic’s own alert phone is set under “Dentists & services”). Separate numbers with commas.">
             <textarea className={`${inputCls} min-h-16`} value={phones} onChange={(e) => setPhones(e.target.value)} placeholder="0911 234 567, 0922 345 678" />

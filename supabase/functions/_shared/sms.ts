@@ -97,7 +97,5 @@ export const DEFAULT_TEMPLATES: Record<string, string> = {
   booking_confirmed: 'Roha Dental {location}: {patient_name}, confirmed: {service}, {date} {time}. Change/cancel: {manage_link}',
   booking_cancelled: 'Roha Dental: your appointment {date} {time} is cancelled. To book again call {location_phone} or rohadent.com/book',
   booking_rescheduled: 'Roha Dental {location}: your appointment is moved to {date} {time}. Details: {manage_link}',
-  reminder_24h: "Reminder: Roha Dental {location} tomorrow {date} {time}, {service}. Can't come? {manage_link}",
-  reminder_2h: 'Roha Dental: see you today at {time}, {location}. Questions: {location_phone}',
   clinic_new_booking: 'New booking: {patient_full_name} {patient_phone}, {service}, {date} {time}, {location}, {dentist}',
 };

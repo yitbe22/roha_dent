@@ -90,7 +90,6 @@ export type Settings = {
   max_reschedules: number;
   max_active_bookings_per_patient: number;
   sms_enabled: boolean;
-  reminders_enabled: boolean;
   owner_alert_phones: string[];
   public_site_url: string;
   updated_at: string;

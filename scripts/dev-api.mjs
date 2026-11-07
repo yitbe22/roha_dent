@@ -146,7 +146,6 @@ function kickWorker(delay = 300) {
 setInterval(async () => {
   try {
     const due = await serial(async () => {
-      await db.query('select public.enqueue_due_reminders()');
       return (await db.query('select public.sms_worker_tick() as due')).rows[0]?.due;
     });
     if (due) kickWorker(0);

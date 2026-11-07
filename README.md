@@ -37,7 +37,7 @@ The dev API has no Auth, so it can't run the `/admin` dashboard. To work on the 
 
 The dev API resets on every start and uses Cloudflare's always-pass Turnstile test keys, so it needs an internet connection.
 
-SMS runs in **dry-run** mode in the dev API. The worker runs after every booking or manage call, and every 30 s it also handles reminders and retries. Nothing is sent. To see the rendered messages, their segment counts and their statuses, open http://127.0.0.1:54321/dev/sms. To send real messages from your machine, which costs SMS credit, run `SMS_DRY_RUN=false SMSETHIOPIA_API_KEY=… npm run dev:api`.
+SMS runs in **dry-run** mode in the dev API. The worker runs after every booking or manage call, and every 30 s it also handles retries. Nothing is sent. To see the rendered messages, their segment counts and their statuses, open http://127.0.0.1:54321/dev/sms. To send real messages from your machine, which costs SMS credit, run `SMS_DRY_RUN=false SMSETHIOPIA_API_KEY=… npm run dev:api`.
 
 ## Tests
 
@@ -137,7 +137,7 @@ Set `apps/web/.env.local` to the project URL and the **publishable** (anon) key.
 
 ### SMS setup (phase 4)
 
-How it works: a change to an appointment fires a deferred trigger at commit. The trigger renders the template and adds rows to `sms_log` with status `queued`. pg_net then calls the `send-sms` Edge Function right away, and that function sends the messages through SMS Ethiopia. pg_cron covers anything the immediate call missed. It runs the worker tick every minute, which handles retries, stuck rows and delivery polling, and it runs reminders every 5 minutes (24 h and 2 h before the appointment). Because the rows come from the database itself, every path sends the right SMS: online booking, the patient's manage link, and dashboard edits. Every attempt is visible in `sms_log`.
+How it works: a change to an appointment fires a deferred trigger at commit. The trigger renders the template and adds rows to `sms_log` with status `queued`. pg_net then calls the `send-sms` Edge Function right away, and that function sends the messages through SMS Ethiopia. pg_cron covers anything the immediate call missed. It runs the worker tick every minute, which handles retries, stuck rows and delivery polling. There are no appointment reminders (removed in migration 0012). Because the rows come from the database itself, every path sends the right SMS: online booking, the patient's manage link, and dashboard edits. Every attempt is visible in `sms_log`.
 
 1. **Extensions.** Enable `pg_cron` and `pg_net` in Dashboard → Database → Extensions *before* pushing migration `0008`, because the push is what creates the cron jobs. If they were enabled later, re-run the `do $$ … cron.schedule …` block at the end of `20261106000008_sms_outbox.sql` in the SQL editor.
 2. **Push and deploy:**
@@ -151,7 +151,7 @@ How it works: a change to an appointment fires a deferred trigger at commit. The
    select vault.create_secret('https://<project-ref>.supabase.co', 'project_url');
    select vault.create_secret('<same value as SMS_WORKER_SECRET>', 'sms_worker_secret');
    ```
-5. **Settings.** In `public.settings`, set `public_site_url` (used for `{manage_link}`), set `owner_alert_phones` (in `+2519…` format; these numbers get the new-booking alert), and set `sms_enabled` and `reminders_enabled`. Also set each location's `alert_phone`.
+5. **Settings.** In `public.settings`, set `public_site_url` (used for `{manage_link}`), set `owner_alert_phones` (in `+2519…` format; these numbers get the new-booking alert), and set `sms_enabled`. Also set each location's `alert_phone`.
 6. **Dry-run check.** Make a test booking. Within a few seconds `sms_log` should show rows with status `dry_run`. Check `select * from cron.job_run_details order by start_time desc limit 5;` and the `send-sms` function logs.
 7. **Go live:**
    - In SMS Ethiopia, create a campaign and an API key, and top up the balance.
