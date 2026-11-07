@@ -3,6 +3,7 @@
 //   {action:"create", email, full_name, role, location_id, phone?}  → {id, tempPassword}
 //   {action:"update", id, full_name?, role?, location_id?, phone?, is_active?}
 //   {action:"reset_password", id}                         → {tempPassword}
+//   {action:"delete", id}   → {ok}   (deactivated accounts only; never yourself; permanent)
 //   {action:"set_own_password", password}   (any active staff member, for their own account) → {ok}
 //
 // Accounts get a temporary password the owner hands over in person; the user must change it at
@@ -40,6 +41,7 @@ const requestSchema = z.discriminatedUnion('action', [
     is_active: z.boolean().optional(),
   }),
   z.object({ action: z.literal('reset_password'), id: z.uuid() }),
+  z.object({ action: z.literal('delete'), id: z.uuid() }),
   z.object({ action: z.literal('set_own_password'), password: z.string().min(10).max(72) }),
 ]);
 
@@ -47,7 +49,7 @@ export const MIN_PASSWORD = 10;
 
 type ErrorCode =
   | 'METHOD_NOT_ALLOWED' | 'UNAUTHORIZED' | 'FORBIDDEN' | 'VALIDATION' | 'INVALID_PHONE' | 'EMAIL_TAKEN'
-  | 'LOCATION_REQUIRED' | 'SELF_CHANGE' | 'NOT_FOUND' | 'WEAK_PASSWORD' | 'SERVER_ERROR';
+  | 'LOCATION_REQUIRED' | 'SELF_CHANGE' | 'NOT_FOUND' | 'WEAK_PASSWORD' | 'STILL_ACTIVE' | 'SERVER_ERROR';
 
 const reply = (req: Request, status: number, body: unknown) =>
   new Response(JSON.stringify(body), {
@@ -197,6 +199,27 @@ Deno.serve(async (req) => {
         });
         if (error) throw error;
         return reply(req, 200, { tempPassword: password });
+      }
+
+      case 'delete': {
+        // Permanent. Only for accounts that were deactivated first (a deliberate two-step action), and
+        // never your own — so the last active owner can never be deleted either.
+        if (input.id === who.user.id) return fail(req, 400, 'SELF_CHANGE', 'You cannot delete your own account');
+        const { data: target, error: tErr } = await asOwner.from('profiles').select('*').eq('id', input.id).maybeSingle();
+        if (tErr) throw tErr;
+        if (!target) return fail(req, 404, 'NOT_FOUND');
+        if (target.is_active) return fail(req, 409, 'STILL_ACTIVE', 'Deactivate the account first');
+
+        // Profile first with the owner's token, so the change history records who deleted it.
+        // Bookings, texts and settings they touched keep their data (created_by/updated_by → null).
+        const { error: pErr } = await asOwner.from('profiles').delete().eq('id', input.id);
+        if (pErr) throw pErr;
+        const { error: uErr } = await svc.auth.admin.deleteUser(input.id);
+        if (uErr && !/not.?found/i.test(uErr.message)) {
+          await svc.from('profiles').insert(target); // put the profile back so the two stay in step
+          throw uErr;
+        }
+        return reply(req, 200, { ok: true });
       }
 
       case 'set_own_password': {

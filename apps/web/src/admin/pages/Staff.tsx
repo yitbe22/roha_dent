@@ -38,6 +38,15 @@ export default function StaffPage() {
     onError: (e) => toast(errorMessage(e), 'error'),
   });
 
+  const remove = useMutation({
+    mutationFn: (row: StaffRow) => callFunction('admin-users', { action: 'delete', id: row.id }),
+    onSuccess: (_r, row) => {
+      toast(`${row.full_name}'s account was deleted`);
+      qc.invalidateQueries({ queryKey: ['staff'] });
+    },
+    onError: (e) => toast(errorMessage(e), 'error'),
+  });
+
   return (
     <>
       <PageHeader title="Staff accounts" subtitle="Who can use this dashboard. Staff only see their own clinic. Owners see everything." />
@@ -84,6 +93,19 @@ export default function StaffPage() {
                         <button type="button" className={btn.small} disabled={update.isPending}
                           onClick={async () => { if (!s.is_active || await ask({ title: `Deactivate ${s.full_name}?`, text: 'They will not be able to sign in any more. You can reactivate them later.', yes: 'Deactivate', danger: true })) update.mutate({ id: s.id, is_active: !s.is_active }); }}>
                           {s.is_active ? 'Deactivate' : 'Reactivate'}
+                        </button>
+                      )}
+                      {!self && !s.is_active && (
+                        <button type="button" className={`${btn.small} text-red-700 hover:bg-red-50`} disabled={remove.isPending}
+                          onClick={async () => {
+                            if (await ask({
+                              title: `Delete ${s.full_name}'s account permanently?`,
+                              text: 'Their sign-in and profile are removed for good. Bookings and texts they handled stay. In the change history their past actions will show as “Staff”. This cannot be undone.',
+                              yes: 'Delete permanently',
+                              danger: true,
+                            })) remove.mutate(s);
+                          }}>
+                          Delete permanently
                         </button>
                       )}
                     </div>
