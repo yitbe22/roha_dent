@@ -68,7 +68,7 @@ export default function Home() {
               ))}
             </ul>
           </div>
-          <div data-reveal style={stagger(2)} className="-mt-4 lg:mt-0">
+          <div data-reveal style={stagger(2)} className="-mt-12 lg:-mt-20">
             <HeroTooth />
           </div>
         </div>
