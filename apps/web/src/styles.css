@@ -204,11 +204,27 @@
 }
 .hero-intro [data-intro='fade'] { filter: none; transform: translateY(8px); animation-duration: 1s; animation-delay: calc(var(--t0, 2.15s) + 0.45s + var(--i, 0) * 0.1s); }
 .hero-intro [data-intro='tooth'] { filter: blur(22px); transform: none; animation: t-in 1.7s var(--ease-out-soft) both; animation-delay: calc(var(--t0, 2.15s) - 0.1s); }
+/* Right column ("Designed with you in mind") starts faint and sharpens, a beat after the headline */
+.hero-intro [data-intro='dim'] { opacity: 0.25; filter: blur(6px); transform: none; animation-delay: calc(var(--t0, 2.15s) + 0.2s + (var(--i, 0) + 4) * 0.08s); }
 .hero-intro [data-intro='nav'] { filter: none; transform: translateY(-6px); animation-duration: 0.7s; animation-delay: calc(var(--t0, 2.15s) + var(--n, 0) * 0.08s); }
 /* During the intro the hero skips its scroll-reveal; the intro animates it instead */
 .hero-intro .hero [data-reveal]:not([data-intro]) { opacity: 1; transform: none; filter: none; transition: none; }
 .hero [data-intro]:not([data-intro='fade']):not([data-intro='tooth']) { display: inline-block; }
 @keyframes w-in { to { opacity: 1; filter: blur(0); transform: none; } }
+
+/* Hero name marquee: huge pale type sliding left forever, faded at both edges */
+.marquee {
+  position: relative; margin-top: -30px; overflow: hidden; white-space: nowrap; pointer-events: none; user-select: none;
+  -webkit-mask: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+  mask: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+}
+.marquee > div {
+  display: inline-block; padding-right: 0.4em;
+  font: 500 clamp(3.5rem, 9vw, 8.25rem)/1.1 var(--font-display); letter-spacing: -0.03em; color: #eef3fc;
+  animation: mq 38s linear infinite;
+}
+@media (width < 64rem) { .marquee { margin-top: 1.5rem; } }
+@keyframes mq { to { transform: translateX(-100%); } }
 @keyframes t-in { 0% { opacity: 0; filter: blur(22px); } 35% { opacity: 1; } 100% { opacity: 1; filter: blur(0); } }
 
 /* ---------- Footer finale (see components/Finale.tsx) ----------
@@ -226,19 +242,17 @@
 [data-footer-up] .site-header { transform: translateY(-120%); }
 [data-footer-up] .action-bar { transform: translateY(110%); }
 
-/* ---------- Scroll reveal ----------
-   Only hidden when boot.js added .js-reveal (motion allowed). If the app never starts,
-   the fallback shows everything after 3 s. */
-.js-reveal [data-reveal] {
-  opacity: 0;
-  transform: translateY(1.25rem);
-  filter: blur(6px);
-  transition: opacity 0.9s var(--ease-out-soft), transform 0.9s var(--ease-out-soft), filter 0.9s var(--ease-out-soft);
-  transition-delay: calc(var(--d, 0) * 90ms);
-}
-.js-reveal:not(.reveal-ready) [data-reveal] { animation: reveal-fallback 0s 3s forwards; }
-.js-reveal [data-reveal].is-in { opacity: 1; transform: none; filter: none; }
-@keyframes reveal-fallback { to { opacity: 1; transform: none; filter: none; } }
+/* Lenis smooth scrolling (lib/smoothScroll.ts) */
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-stopped { overflow: hidden; }
+.lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+
+/* ---------- Scroll reveal (lib/useReveal.ts) ----------
+   Scroll-linked: JS sets opacity/transform/blur inline on every frame. Until it starts, blocks
+   stay hidden so nothing flashes; if the app never starts, the fallback shows them after 3 s. */
+.js-reveal:not(.reveal-ready) [data-reveal] { opacity: 0; animation: reveal-fallback 0s 3s forwards; }
+@keyframes reveal-fallback { to { opacity: 1; } }
 /* ---------- shadcn/ui tokens, mapped onto the Roha palette (light only) ---------- */
 @theme inline {
   --font-heading: var(--font-display);

@@ -21,7 +21,9 @@ import { useGrowPanel } from '../lib/scrollFx';
 import { CtaBand } from '../components/CtaBand';
 import { CountUp } from '../components/CountUp';
 
-const HERO_TITLE = 'Specialist dental care in Addis Ababa and Gonder';
+const HERO_TITLE = 'Your smile starts here.';
+const HERO_RIGHT = ['Designed', 'with you', 'in mind'];
+const MARQUEE = 'Roha Speciality Dental Center — Addis Ababa · Gonder —';
 
 function SectionHead({ id, title, children }: { id: string; title: string; children?: ReactNode }) {
   return (
@@ -54,37 +56,44 @@ export default function Home() {
         jsonLd={[websiteLd(), organizationLd(), ...locations.map(dentistLd)]}
       />
 
-      {/* Hero */}
-      <section id="top" className="hero overflow-hidden">
-        <div className="wrap grid items-center gap-10 pt-8 pb-[clamp(3rem,7vw,6rem)] lg:grid-cols-[1.1fr_1fr] lg:gap-16 lg:pt-14">
-          <div>
-            <h1 data-reveal className="text-h1 max-w-[13ch]">
+      {/* Hero: headline | glass tooth | "Designed with you in mind", then the name marquee (as in the reference) */}
+      <section id="top" className="hero overflow-hidden pt-[clamp(0.5rem,2vw,1.5rem)]">
+        <div className="wrap grid items-center lg:min-h-[min(36rem,70vh)] lg:grid-cols-[1fr_minmax(16rem,1.05fr)_1fr] lg:gap-2">
+          <div className="relative z-10 grid gap-[1.625rem]">
+            <h1 className="text-[clamp(2.5rem,5.4vw,4.75rem)] leading-[0.98]">
               {HERO_TITLE.split(' ').map((w, i) => (
                 <Fragment key={i}>{i > 0 && ' '}<span data-intro style={{ '--i': i } as CSSProperties}>{w}</span></Fragment>
               ))}
             </h1>
-            <p data-reveal data-intro="fade" style={{ ...stagger(1), '--i': 0 } as CSSProperties} className="mt-7 max-w-[34rem] text-lede">
-              From routine cleaning to root canals, crowns and clear aligners. Pick a time online and we confirm it by SMS. You pay at the clinic.
+            <p data-intro="fade" style={{ '--i': 0 } as CSSProperties} className="max-w-[34ch] text-[0.9375rem]">
+              Check-ups, cleaning, braces, crowns and root canal treatment at our Addis Ababa and Gonder clinics.
             </p>
-            <div data-reveal data-intro="fade" style={{ ...stagger(2), '--i': 1 } as CSSProperties} className="mt-9 flex flex-wrap gap-3">
-              <Button asChild size="lg">
-                <Link to="/book"><CalendarDays data-icon="inline-start" />{t('cta.book')}</Link>
-              </Button>
-              <Button asChild size="lg" variant="outline">
-                <Link to="/services">See treatments</Link>
-              </Button>
-            </div>
-            <ul data-reveal data-intro="fade" style={{ ...stagger(3), '--i': 2 } as CSSProperties} className="mt-9 flex flex-wrap gap-2" aria-label="Clinics">
+            <ul data-intro="fade" style={{ '--i': 1 } as CSSProperties} className="flex flex-wrap gap-2" aria-label="Clinics">
               {locations.map((l) => (
                 <li key={l.slug}>
-                  <Link to={`/locations/${l.slug}`} className="chip inline-flex items-center gap-2 hover:border-sky"><span className="size-1.5 rounded-full bg-adey" aria-hidden="true" />{l.city}</Link>
+                  <Link to={`/locations/${l.slug}`} className="chip inline-flex items-center gap-2 text-xs hover:border-sky"><span className="size-1.5 rounded-full bg-adey" aria-hidden="true" />{l.city}</Link>
                 </li>
               ))}
+              <li><Link to="/services" className="chip inline-flex text-xs hover:border-sky">{services.length} treatments</Link></li>
             </ul>
           </div>
-          <div data-reveal data-intro="tooth" style={stagger(2)} className="-mt-12 lg:-mt-20">
+          <div data-intro="tooth" className="-mt-2.5 -mb-5 max-lg:order-first lg:my-0">
             <HeroTooth />
           </div>
+          <div className="relative z-10 mt-7 grid justify-items-start gap-[1.375rem] lg:mt-0">
+            <h2 className="text-[clamp(2rem,3.6vw,3.25rem)] leading-none">
+              {HERO_RIGHT.map((w, i) => (
+                <Fragment key={i}>{i > 0 && ' '}<span data-intro="dim" style={{ '--i': i } as CSSProperties}>{w}</span></Fragment>
+              ))}
+            </h2>
+            <Link to="/book" data-intro="fade" style={{ '--i': 2 } as CSSProperties} className="btn-primary min-h-11 pl-2 text-[0.9375rem]">
+              <span className="btn-ic"><CalendarDays className="size-4" aria-hidden="true" /></span>
+              {t('cta.book')}
+            </Link>
+          </div>
+        </div>
+        <div className="marquee" aria-hidden="true">
+          <div>{MARQUEE}&nbsp;</div><div>{MARQUEE}&nbsp;</div>
         </div>
       </section>
 
@@ -95,11 +104,11 @@ export default function Home() {
             className="absolute inset-0 -z-20 h-full w-full object-cover" />
           <div className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgb(29_62_130/0.9)_0%,rgb(42_82_158/0.66)_50%,rgb(25_55_120/0.9)_100%)]" aria-hidden="true" />
           <div className="max-w-2xl p-[clamp(1.5rem,4vw,2.75rem)]">
-            <h2 id="about-h" className="text-h2 max-w-[15ch] text-white">Two clinics, one way of caring for you</h2>
-            <p className="mt-5 max-w-[46ch] text-white/90">
+            <h2 id="about-h" data-reveal className="text-h2 max-w-[15ch] text-white">Two clinics, one way of caring for you</h2>
+            <p data-reveal style={stagger(1)} className="mt-5 max-w-[46ch] text-white/90">
               Roha Speciality Dental Center cares for families in Addis Ababa and Gonder. Every visit starts with an examination, so your dentist can explain what is needed, your options and what to expect before treatment begins.
             </p>
-            <Button asChild variant="inverse-outline" className="mt-7"><Link to="/about">About Roha</Link></Button>
+            <div data-reveal style={stagger(2)}><Button asChild variant="inverse-outline" className="mt-7"><Link to="/about">About Roha</Link></Button></div>
           </div>
           <dl className="grid grid-cols-2 bg-roha-900 lg:grid-cols-4">
             {facts.map((f, i) => (
@@ -149,7 +158,7 @@ export default function Home() {
           <div data-reveal>
             <h2 id="ba-h" className="text-h2 max-w-[14ch]">{t('beforeAfter.heading')}</h2>
             <p className="mt-5 max-w-md">
-              Drag the handle to compare. At your visit the dentist records your starting shade, so you can see the change for yourself.
+              <strong className="font-medium text-ink">Drag the handle to compare.</strong> At your visit the dentist records your starting shade, so you can see the change for yourself.
             </p>
             <Link to={`/services/${beforeAfterCases[0].service}`} className="link mt-6 inline-block">About tooth whitening</Link>
           </div>

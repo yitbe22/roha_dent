@@ -9,6 +9,7 @@ import { services } from '../content/services';
 import { useReveal } from '../lib/useReveal';
 import { initIntro, playIntro } from '../lib/intro';
 import { useFinale, type FinaleRefs } from './Finale';
+import { useSmoothScroll } from '../lib/smoothScroll';
 
 const NAV = [
   { to: '/services', key: 'nav.services' },
@@ -114,7 +115,7 @@ function Footer() {
         <div ref={refs.inner} className="pb-28 will-change-transform lg:pb-0">
           <div className="wrap grid gap-10 pt-12 pb-10 md:grid-cols-[1.2fr_2fr_1fr] lg:pt-16">
             <div>
-              <div ref={refs.brand} className="fin-brand w-fit"><Logo tone="white" /></div>
+              <div ref={refs.brand} className="fin-brand flex h-13 w-fit items-center"><Logo tone="white" /></div>
               <p className="mt-5 max-w-xs text-white/80">{t('footer.tagline')}</p>
             </div>
             <div className="grid gap-8 sm:grid-cols-2">
@@ -203,6 +204,7 @@ export function Layout({ children }: { children: ReactNode }) {
   const { t } = useTranslation();
   const { pathname } = useLocation();
   useReveal(pathname);
+  useSmoothScroll(pathname);
   useEffect(initIntro, []);
   return (
     <>

@@ -4,6 +4,8 @@
 
 /** When the hero starts appearing on first load (matches --t0 and the #loader timing in styles.css). */
 export const INTRO_MS = 2150;
+import { jumpToTop } from './smoothScroll';
+
 const REPLAY_T0 = '1.15s';
 const INTRO_TOTAL_MS = 2150 + 2000;
 
@@ -39,7 +41,7 @@ export function playIntro(swap: () => void) {
   const loader = document.getElementById('loader');
   if (reduced() || !loader) {
     swap();
-    window.scrollTo(0, 0);
+    jumpToTop();
     return;
   }
   const root = document.documentElement;
@@ -48,7 +50,7 @@ export function playIntro(swap: () => void) {
   loader.className = 'replay';
   window.setTimeout(() => {
     swap();
-    window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
+    jumpToTop();
     root.style.setProperty('--t0', REPLAY_T0);
     root.classList.remove('hero-intro');
     void root.offsetWidth;

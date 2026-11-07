@@ -4,12 +4,12 @@ import { useEffect, type RefObject } from 'react';
 // Both are driven by scroll position, so they play forwards and backwards, and both are
 // skipped entirely with prefers-reduced-motion (the elements then simply sit at rest).
 
-const clamp = (v: number, a = 0, b = 1) => Math.max(a, Math.min(b, v));
-const ease = (t: number) => 1 - Math.pow(1 - t, 3);
-const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+export const clamp = (v: number, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+export const ease = (t: number) => 1 - Math.pow(1 - t, 3);
+export const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
 /** Runs `frame` on every scroll/resize (one per animation frame) while mounted. */
-function useScrollFrame(frame: () => (() => void) | void, deps: unknown[]) {
+export function useScrollFrame(frame: () => (() => void) | void, deps: unknown[]) {
   useEffect(() => {
     if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     let queued = false;

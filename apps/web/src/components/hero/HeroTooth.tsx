@@ -59,17 +59,22 @@ export function HeroTooth() {
   }, []);
 
   return (
-    <div className="relative isolate mx-auto aspect-[9/10] w-full max-w-[22rem] sm:max-w-[26rem] lg:max-w-[34rem]" aria-hidden="true">
-      <div className="absolute inset-[6%] -z-10 rounded-full bg-[radial-gradient(closest-side,rgb(61_138_247/0.28),rgb(61_138_247/0.08)_60%,transparent)]" />
-      <img
-        src="/img/tooth.webp"
-        alt=""
-        width={900}
-        height={1000}
-        fetchPriority="high"
-        className={`absolute inset-0 size-full object-contain transition-opacity duration-700 ${live ? 'opacity-0' : 'animate-[tooth-float_7s_ease-in-out_infinite]'}`}
-      />
-      <canvas ref={canvas} className={`absolute inset-0 size-full transition-opacity duration-700 ${live ? 'opacity-100' : 'opacity-0'}`} />
+    // Sized like the reference's tooth stage: min(600px, 70vh) tall on desktop, 340px on phones,
+    // with the drawing area overflowing it (160% × 120% on desktop) so the tooth never clips.
+    <div className="relative isolate h-[340px] w-full lg:h-[min(600px,70vh)] lg:min-h-[360px]" aria-hidden="true">
+      <div className="absolute inset-[18%_10%] -z-10 rounded-full bg-[radial-gradient(closest-side,rgb(61_138_247/0.22),transparent)] blur-[10px]" />
+      <div className="pointer-events-none absolute -inset-[10%] lg:inset-x-[-30%]">
+        {/* The still was rendered with the camera closer (4.2 vs 5.4), so shrink it to the same size as the live tooth */}
+        <img
+          src="/img/tooth.webp"
+          alt=""
+          width={900}
+          height={1000}
+          fetchPriority="high"
+          className={`absolute inset-0 size-full scale-[0.776] object-contain transition-opacity duration-700 ${live ? 'opacity-0' : 'animate-[tooth-float_7s_ease-in-out_infinite]'}`}
+        />
+        <canvas ref={canvas} className={`absolute inset-0 size-full transition-opacity duration-700 ${live ? 'opacity-100' : 'opacity-0'}`} />
+      </div>
     </div>
   );
 }

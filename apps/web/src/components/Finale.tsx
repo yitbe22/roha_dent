@@ -1,8 +1,14 @@
 import { useEffect, type RefObject } from 'react';
 
 const clamp = (v: number, a = 0, b = 1) => Math.max(a, Math.min(b, v));
-const ease = (t: number) => 1 - Math.pow(1 - t, 3);
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+const ease = (t: number) => 1 - Math.pow(1 - t, 3);
+/**
+ * Height of the reference's footer columns (px). The reference starts the logo's trip when the
+ * rising footer has shown that much; ours has more in it, so we time the trip off the reference's
+ * height to start at the same point (about 37% of a 760px screen).
+ */
+const REF_FOOT = 280;
 
 export type FinaleRefs = {
   panel: RefObject<HTMLElement | null>;
@@ -48,7 +54,9 @@ export function useFinale(refs: FinaleRefs, key: string) {
       const restY = Math.max(0, vh - footH);
       const off = fits ? Math.max(0, restY - panelTop) : 0;
       I.style.transform = off ? `translateY(${off.toFixed(1)}px)` : '';
-      const rise = fits ? clamp((restY - panelTop) / Math.max(1, restY)) : 0;
+      // Timing exactly as the reference: rise 0→1 from "footer shows REF_FOOT px" to "footer fills the screen".
+      const startY = Math.max(0, vh - Math.min(footH, REF_FOOT));
+      const rise = fits ? clamp((startY - panelTop) / Math.max(1, startY)) : 0;
       const sp = S.getBoundingClientRect();
       const pin = clamp((vh - sp.top) / Math.max(1, sp.height));
       const fade = clamp(1 - rise * 1.7 - (fits ? 0 : pin * 2));
@@ -59,10 +67,15 @@ export function useFinale(refs: FinaleRefs, key: string) {
       const fb = B.getBoundingClientRect();
       const bw = M.offsetWidth, bh = M.offsetHeight;
       const s0 = fb.height / Math.max(1, bh);
+      // The reference's curve: most of the trip while the footer rises, the last stretch as it holds.
       const e = ease(clamp(fits ? rise * 0.55 + pin * 0.75 : pin * 1.3));
       // Tall footer (phones): the real logo scrolls away; the big one fades in from the top once pinned.
-      const sx = fb.left, sy = (fits ? fb.top : 24) - panelTop;
-      M.style.opacity = fits ? '' : clamp(pin * 5).toFixed(3);
+      // Like the reference, the start point rests once REF_FOOT px of footer show (our columns are
+      // taller and keep rising, so don't let them carry the start point up with them).
+      const brandOff = fb.top - panelTop - off;
+      const startTop = Math.max(fb.top, vh - Math.min(footH, REF_FOOT) + brandOff);
+      const sx = fb.left, sy = (fits ? startTop : 24) - panelTop;
+      M.style.opacity = fits ? '' : clamp(pin * 6).toFixed(3);
       const cx = window.innerWidth / 2 - bw / 2, cy = vh / 2 - bh / 2 - panelTop;
       M.style.transform = `translate(${lerp(sx, cx, e).toFixed(1)}px, ${lerp(sy, cy, e).toFixed(1)}px) scale(${lerp(s0, 1, e).toFixed(4)})`;
 

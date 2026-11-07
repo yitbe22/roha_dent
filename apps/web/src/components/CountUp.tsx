@@ -20,10 +20,17 @@ export function CountUp({ value, duration = 1700 }: { value: string; duration?: 
     const [, pre, num, suf] = m;
     const to = Number(num);
     let raf = 0;
+    // Counts up every time it comes into view; resets once it has fully left.
+    let playing = false;
     const io = new IntersectionObserver(
       ([e]) => {
-        if (!e.isIntersecting) return;
-        io.disconnect();
+        if (!e.isIntersecting) {
+          playing = false;
+          return;
+        }
+        if (playing || e.intersectionRatio < 0.6) return;
+        playing = true;
+        cancelAnimationFrame(raf);
         const t0 = performance.now();
         const tick = (now: number) => {
           const t = Math.min(1, (now - t0) / duration);
@@ -32,7 +39,7 @@ export function CountUp({ value, duration = 1700 }: { value: string; duration?: 
         };
         raf = requestAnimationFrame(tick);
       },
-      { threshold: 0.6 },
+      { threshold: [0, 0.6] },
     );
     io.observe(el);
     return () => {

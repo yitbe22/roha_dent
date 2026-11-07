@@ -151,7 +151,7 @@ export function mountTooth(canvas: HTMLCanvasElement, opts: ToothOptions = {}) {
   scene.add(key, back, new THREE.AmbientLight(0xbfd6ff, 0.6));
 
   const cam = new THREE.PerspectiveCamera(28, 1, 0.1, 50);
-  cam.position.set(0, 0, 4.2);
+  cam.position.set(0, 0, 5.4); // same framing as the reference
 
   const dis: Uniform = { value: reduce ? 1.2 : -0.1 };
   const pivot = new THREE.Group();
