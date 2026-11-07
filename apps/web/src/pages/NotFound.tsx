@@ -9,7 +9,7 @@ export default function NotFound() {
     <>
       <Seo title={t('notFound.title')} path={pathname} noindex />
       <div className="wrap py-24">
-        <span className="step-cross block size-14 bg-mist" aria-hidden="true" />
+        <img src="/img/logo.png" alt="" width={141} height={160} className="h-14 w-auto opacity-90" />
         <h1 className="mt-8 text-h1">{t('notFound.title')}</h1>
         <p className="mt-5 max-w-xl text-lede text-ink-soft">{t('notFound.body')}</p>
         <div className="mt-8 flex flex-wrap gap-3">

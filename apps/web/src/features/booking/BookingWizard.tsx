@@ -167,7 +167,7 @@ export default function BookingWizard() {
     const at = result.res.appointment.startsAt;
     return (
       <section aria-labelledby="done-h" className="max-w-2xl">
-        <span className="step-cross flex size-14 items-center justify-center bg-roha-700 text-adey" aria-hidden="true">
+        <span className="flex size-14 items-center justify-center rounded-full bg-gradient-to-br from-sky to-roha-700 text-white shadow-[0_10px_24px_-12px_rgb(22_52_114/0.7)]" aria-hidden="true">
           <Icon name="check" className="size-7" />
         </span>
         <h2 id="done-h" ref={headingRef} tabIndex={-1} className="mt-6 text-h2 outline-none">
@@ -176,7 +176,7 @@ export default function BookingWizard() {
         <p className="mt-3 text-lede text-ink-soft">
           {t(confirmed ? 'booking.done.confirmedBody' : 'booking.done.pendingBody', { phone: formatEthiopianPhone(result.phone) })}
         </p>
-        <dl className="step-corner mt-8 grid gap-4 bg-white p-6 ring-1 ring-line sm:grid-cols-2">
+        <dl className="rounded-card mt-8 grid gap-4 bg-white p-6 ring-1 ring-line sm:grid-cols-2">
           <Fact label={t('booking.steps.time')}>
             {formatClinicDate(at)}, {formatClinicTime(at)}
             <span className="block text-sm font-medium text-ink-soft">{ethiopianTime(at, localLang)}</span>
@@ -289,7 +289,7 @@ export default function BookingWizard() {
         {step === 'details' && draft.slot && (
           <StepShell title={t('booking.details.title')} headingRef={headingRef} onBack={() => goto('time')}>
             {/* What they are booking — always above the button, also on phones */}
-            <div className="step-corner mb-8 max-w-xl bg-mist p-5">
+            <div className="rounded-card mb-8 max-w-xl bg-mist p-5">
               <p className="text-sm font-semibold text-ink-soft">{t('booking.details.check')}</p>
               <p className="mt-1 text-lg font-bold text-roha-900">{when(draft.slot)}</p>
               <p className="text-roha-900">
@@ -340,7 +340,7 @@ export default function BookingWizard() {
 
       {/* Running summary (desktop only — on phones the details step shows it above the form) */}
       <aside className="hidden lg:sticky lg:top-28 lg:block lg:self-start">
-        <div className="step-corner bg-mist p-5">
+        <div className="rounded-card bg-mist p-5">
           <h2 className="font-bold text-roha-900">{t('booking.details.summary')}</h2>
           <dl className="mt-3 divide-y divide-roha-200">
             <SummaryRow label={t('booking.steps.location')} value={location?.city} onChange={() => goto('choose')} />

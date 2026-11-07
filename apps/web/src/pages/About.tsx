@@ -43,7 +43,7 @@ export default function About() {
           <h2 id="commit-h" className="text-h2">What you can expect</h2>
           <dl className="mt-6 space-y-6">
             {commitments.map(([title, body]) => (
-              <div key={title} className="border-l-4 border-adey pl-5">
+              <div key={title} className="border-l-2 border-sky pl-5">
                 <dt className="text-lg font-bold text-roha-900">{title}</dt>
                 <dd className="mt-1 text-ink-soft">{body}</dd>
               </div>

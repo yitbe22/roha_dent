@@ -66,7 +66,7 @@ export default function ServiceDetail() {
             <ol className="mt-6 space-y-6 border-l-2 border-mist pl-6">
               {s.visit.map((v, i) => (
                 <li key={v.title} className="relative">
-                  <span className="step-cross absolute -left-[2.45rem] top-0 flex size-7 items-center justify-center bg-roha-700 text-sm font-bold text-white">
+                  <span className="absolute -left-[2.45rem] top-0 flex size-7 items-center justify-center rounded-full bg-roha-700 text-sm font-semibold text-white tabular-nums">
                     {i + 1}
                   </span>
                   <h3 className="text-lg font-bold">{v.title}</h3>
@@ -100,7 +100,7 @@ export default function ServiceDetail() {
         </article>
 
         <aside className="space-y-10 lg:sticky lg:top-28 lg:self-start">
-          <div className="step-corner bg-mist p-6">
+          <div className="rounded-card bg-mist p-6">
             <h2 className="text-lg font-bold">Who treats you</h2>
             <ul className="mt-4 space-y-3">
               {team.map((d) => (

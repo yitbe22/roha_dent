@@ -64,7 +64,7 @@ export default function LocationDetail() {
             href={l.mapUrl}
             target="_blank"
             rel="noopener"
-            className="step-corner group relative flex aspect-[16/9] items-end overflow-hidden bg-roha-700 p-6 text-white"
+            className="rounded-card group relative flex aspect-[16/9] items-end overflow-hidden bg-roha-700 p-6 text-white"
           >
             <svg className="absolute inset-0 h-full w-full text-roha-600" aria-hidden="true">
               <defs>
@@ -74,7 +74,7 @@ export default function LocationDetail() {
               </defs>
               <rect width="100%" height="100%" fill={`url(#grid-${l.slug})`} />
             </svg>
-            <span className="step-cross absolute top-1/2 left-1/2 size-10 -translate-x-1/2 -translate-y-1/2 bg-adey" aria-hidden="true" />
+            <span className="absolute top-1/2 left-1/2 grid size-11 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-white text-roha-700 shadow-lg" aria-hidden="true"><Icon name="pin" className="size-5" /></span>
             <span className="relative font-semibold group-hover:underline">Open {l.city} clinic in Google Maps</span>
           </a>
         </section>

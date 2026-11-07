@@ -6,9 +6,9 @@ import { Centered, ErrorBox, Field, btn, inputCls, useToast } from '../ui';
 function Brand() {
   return (
     <div className="mb-8 flex items-center gap-3">
-      <span className="step-cross block size-9 bg-roha-700" aria-hidden="true" />
+      <img src="/img/logo.png" alt="" width={141} height={160} className="h-10 w-auto" />
       <span className="leading-tight">
-        <span className="block text-lg font-extrabold text-roha-800">Roha Dental</span>
+        <span className="block font-display text-lg font-semibold text-ink">Roha Dental</span>
         <span className="block text-sm text-ink-soft">Staff dashboard</span>
       </span>
     </div>

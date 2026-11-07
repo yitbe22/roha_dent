@@ -26,7 +26,7 @@ export default function Doctors() {
       <ul className="wrap mt-12 grid gap-x-10 gap-y-12 md:grid-cols-2">
         {dentists.map((d) => (
           <li key={d.slug} id={d.slug} className="grid grid-cols-[5rem_1fr] gap-5 sm:grid-cols-[7rem_1fr]">
-            <div className="step-corner flex aspect-square items-center justify-center bg-mist text-2xl font-extrabold text-roha-700 sm:text-3xl" aria-hidden="true">
+            <div className="rounded-card flex aspect-square items-center justify-center bg-gradient-to-br from-[#eaf2ff] to-[#c9dcff] font-display text-3xl font-medium tracking-tight text-roha-700 sm:text-4xl" aria-hidden="true">
               {d.name.replace('Dr. ', '').split(' ').map((p) => p[0]).join('')}
             </div>
             <div>

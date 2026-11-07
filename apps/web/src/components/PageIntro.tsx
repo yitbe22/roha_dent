@@ -6,10 +6,10 @@ export type Crumb = { name: string; path: string };
 /** Inner-page header: breadcrumbs, H1, lede. */
 export function PageIntro({ crumbs, title, lede, children }: { crumbs: Crumb[]; title: string; lede?: string; children?: ReactNode }) {
   return (
-    <div className="border-b border-line bg-gradient-to-b from-white to-enamel">
-      <div className="wrap pt-8 pb-12 sm:pt-10 sm:pb-16">
+    <div className="border-b border-line bg-[linear-gradient(180deg,#fff,var(--color-page))]">
+      <div className="wrap pt-8 pb-[clamp(3rem,7vw,5.5rem)] sm:pt-12">
         <nav aria-label="Breadcrumb">
-          <ol className="flex flex-wrap items-center gap-2 text-sm text-ink-soft">
+          <ol className="flex flex-wrap items-center gap-2 text-sm">
             {crumbs.map((c, i) => (
               <li key={c.path} className="flex items-center gap-2">
                 {i > 0 && <span aria-hidden="true" className="text-roha-300">/</span>}
@@ -22,8 +22,8 @@ export function PageIntro({ crumbs, title, lede, children }: { crumbs: Crumb[]; 
             ))}
           </ol>
         </nav>
-        <h1 className="mt-5 max-w-3xl text-h1">{title}</h1>
-        {lede && <p className="mt-5 max-w-2xl text-lede text-ink-soft">{lede}</p>}
+        <h1 className="mt-6 max-w-[16ch] text-h1">{title}</h1>
+        {lede && <p className="mt-6 max-w-2xl text-lede">{lede}</p>}
         {children}
       </div>
     </div>

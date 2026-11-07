@@ -326,7 +326,7 @@ export function fmtRelative(iso: string): string {
 
 export function Centered({ children }: { children: ReactNode }) {
   return (
-    <main className="grid min-h-dvh place-items-center bg-enamel px-4 py-10">
+    <main className="grid min-h-dvh place-items-center bg-page px-4 py-10">
       <div className="w-full max-w-sm">{children}</div>
     </main>
   );

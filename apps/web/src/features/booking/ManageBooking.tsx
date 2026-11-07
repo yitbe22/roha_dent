@@ -92,7 +92,7 @@ export default function ManageBooking() {
         </p>
       )}
       <p className="text-ink-soft">{t('manage.hello', { name: a.patient_first_name })}</p>
-      <div className="step-corner mt-3 bg-white p-6 ring-1 ring-line sm:p-8">
+      <div className="rounded-card mt-3 bg-white p-6 ring-1 ring-line sm:p-8">
         <span className={`inline-block rounded-full px-3 py-1 text-sm font-semibold ring-1 ${STATUS_STYLE[a.status]}`}>
           {t(`manage.status.${a.status}`)}
         </span>

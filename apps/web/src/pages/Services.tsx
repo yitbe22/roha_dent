@@ -26,7 +26,7 @@ export default function Services() {
           {services.map((s) => (
             <li key={s.slug} className="border-b border-line py-7">
               <h2 className="text-h3">
-                <Link to={`/services/${s.slug}`} className="hover:text-roha-700 hover:underline hover:decoration-adey hover:decoration-2 hover:underline-offset-4">
+                <Link to={`/services/${s.slug}`} className="hover:text-roha-700 hover:underline hover:decoration-sky hover:decoration-[1.5px] hover:underline-offset-4">
                   {s.name}
                 </Link>
               </h2>

@@ -123,13 +123,13 @@ function Shell() {
   const sidebar = (
     <div className="flex h-full flex-col gap-5 overflow-y-auto bg-roha-900 p-4 text-white">
       <div className="flex items-center gap-2.5 px-1">
-        <span className="step-cross block size-8 bg-adey" aria-hidden="true" />
+        <img src="/img/logo-white.png" alt="" width={141} height={160} className="h-8 w-auto" />
         <span className="leading-tight">
-          <span className="block text-lg font-extrabold">Roha Dental</span>
+          <span className="block font-display text-lg font-semibold">Roha Dental</span>
           <span className="block text-sm text-roha-200">{auth.isOwner ? 'Both clinics' : `${myLocation?.city ?? ''} clinic`}</span>
         </span>
       </div>
-      <NavLink to="/admin/new" className="btn-adey min-h-12">
+      <NavLink to="/admin/new" className="btn-light min-h-12">
         <Icon name="plus" className="size-5" /> New booking
       </NavLink>
       <nav aria-label="Dashboard" className="flex flex-col gap-5">
@@ -159,7 +159,7 @@ function Shell() {
   );
 
   return (
-    <div className="min-h-dvh bg-enamel lg:grid lg:grid-cols-[16.5rem_1fr] lg:bg-[linear-gradient(to_right,var(--color-roha-900)_16.5rem,var(--color-enamel)_16.5rem)]">
+    <div className="min-h-dvh bg-page lg:grid lg:grid-cols-[16.5rem_1fr] lg:bg-[linear-gradient(to_right,var(--color-roha-900)_16.5rem,var(--color-page)_16.5rem)]">
       <aside className="sticky top-0 hidden h-dvh lg:block">{sidebar}</aside>
 
       <header className="sticky top-0 z-30 flex items-center justify-between gap-3 bg-roha-900 px-4 py-2 text-white lg:hidden">
@@ -168,7 +168,7 @@ function Shell() {
           <Icon name={menuOpen ? 'close' : 'menu'} /> Menu
           {(pending.data ?? 0) > 0 && <span className="rounded-full bg-adey px-2 text-sm font-bold text-roha-900">{pending.data}</span>}
         </button>
-        <NavLink to="/admin/new" className="btn-adey min-h-10 px-3 text-sm"><Icon name="plus" className="size-4" /> New booking</NavLink>
+        <NavLink to="/admin/new" className="btn-light min-h-10 px-3 text-sm"><Icon name="plus" className="size-4" /> New booking</NavLink>
       </header>
       {menuOpen && <div className="fixed inset-0 top-14 z-20 lg:hidden">{sidebar}</div>}
 

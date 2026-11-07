@@ -17,10 +17,17 @@ const NAV = [
 function Header() {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const { pathname } = useLocation();
   useEffect(() => {
     setOpen(false);
   }, [pathname]);
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false);
@@ -28,22 +35,20 @@ function Header() {
     return () => window.removeEventListener('keydown', onKey);
   }, [open]);
 
+  const solid = scrolled || open;
   return (
-    <header className="sticky top-0 z-30 border-b border-line/70 bg-enamel/95 backdrop-blur supports-[backdrop-filter]:bg-enamel/80">
-      <div className="wrap flex h-16 items-center justify-between gap-4 lg:h-[4.5rem]">
+    <header
+      className={`sticky top-0 z-30 transition-[background-color,box-shadow] duration-300 ${
+        solid ? 'bg-white/85 shadow-[0_1px_0_var(--color-line)] backdrop-blur-md' : 'bg-white'
+      }`}
+    >
+      <div className="wrap flex h-16 items-center justify-between gap-6 lg:h-[4.25rem]">
         <Logo />
         <nav aria-label={t('nav.primary')} className="hidden lg:block">
-          <ul className="flex items-center gap-1">
+          <ul className="flex items-center gap-7">
             {NAV.map((n) => (
               <li key={n.to}>
-                <NavLink
-                  to={n.to}
-                  className={({ isActive }) =>
-                    `rounded-md px-3 py-2 font-medium transition-colors hover:text-roha-700 ${
-                      isActive ? 'text-roha-700 underline decoration-adey decoration-[3px] underline-offset-[10px]' : 'text-ink'
-                    }`
-                  }
-                >
+                <NavLink to={n.to} className="grow-line block py-1.5 text-[0.9375rem] text-ink">
                   {t(n.key)}
                 </NavLink>
               </li>
@@ -51,12 +56,13 @@ function Header() {
           </ul>
         </nav>
         <div className="flex items-center gap-2">
-          <Link to="/book" className="btn-primary hidden sm:inline-flex">
+          <Link to="/book" className="btn-primary hidden min-h-11 pl-2 text-[0.9375rem] sm:inline-flex">
+            <span className="btn-ic"><Icon name="calendar" className="size-4" /></span>
             {t('cta.book')}
           </Link>
           <button
             type="button"
-            className="btn-ghost px-3 lg:hidden"
+            className="grid size-11 place-items-center rounded-full border border-line bg-white text-ink lg:hidden"
             aria-expanded={open}
             aria-controls="mobile-nav"
             onClick={() => setOpen((v) => !v)}
@@ -67,11 +73,11 @@ function Header() {
         </div>
       </div>
       {open && (
-        <nav id="mobile-nav" aria-label={t('nav.primary')} className="border-t border-line bg-enamel lg:hidden">
+        <nav id="mobile-nav" aria-label={t('nav.primary')} className="border-t border-line bg-white shadow-[0_18px_30px_-18px_rgb(15_35_80/0.25)] lg:hidden">
           <ul className="wrap flex flex-col py-2">
             {NAV.map((n) => (
               <li key={n.to}>
-                <NavLink to={n.to} className="flex min-h-12 items-center justify-between border-b border-line/60 text-lg font-semibold">
+                <NavLink to={n.to} className="flex min-h-13 items-center justify-between border-b border-line text-lg text-ink aria-[current=page]:text-roha-700">
                   {t(n.key)}
                   <Icon name="chevron" className="size-5 text-roha-300" />
                 </NavLink>
@@ -90,23 +96,25 @@ function Header() {
 function Footer() {
   const { t } = useTranslation();
   return (
-    <footer className="on-blue mt-24 bg-roha-800 pb-28 text-roha-100 lg:pb-0">
-      <div className="wrap grid gap-12 py-16 md:grid-cols-[1.2fr_2fr_1fr]">
+    <footer className="on-blue relative isolate mt-[clamp(4rem,9vw,7.5rem)] overflow-hidden bg-panel pb-28 text-white lg:pb-0">
+      <img src="/img/logo-white.png" alt="" width={282} height={320} aria-hidden="true"
+        className="pointer-events-none absolute -bottom-16 -left-10 -z-10 w-64 opacity-[0.08]" />
+      <div className="wrap grid gap-12 pt-14 pb-12 md:grid-cols-[1.2fr_2fr_1fr] lg:pt-20">
         <div>
           <Logo tone="white" />
-          <p className="mt-4 max-w-xs text-roha-200">{t('footer.tagline')}</p>
+          <p className="mt-5 max-w-xs text-white/80">{t('footer.tagline')}</p>
         </div>
-        <div className="grid gap-8 sm:grid-cols-2">
+        <div className="grid gap-10 sm:grid-cols-2">
           {locations.map((l) => (
             <div key={l.slug}>
-              <h2 className="text-lg text-white">{l.city}</h2>
-              <ul className="mt-3 space-y-2 text-roha-200">
+              <h2 className="text-sm font-medium tracking-normal text-white/80">{l.city}</h2>
+              <ul className="mt-3 space-y-1.5 text-white/85">
                 <li>
-                  <a href={`tel:${l.phoneE164}`} className="font-semibold text-white hover:text-adey">{l.phoneDisplay}</a>
+                  <a href={`tel:${l.phoneE164}`} className="font-display text-xl text-white hover:underline">{l.phoneDisplay}</a>
                 </li>
-                {l.hoursText.map((h) => <li key={h}>{h}</li>)}
-                <li>
-                  <Link to={`/locations/${l.slug}`} className="underline decoration-roha-500 underline-offset-4 hover:text-white">
+                {l.hoursText.map((h) => <li key={h} className="text-[0.9375rem]">{h}</li>)}
+                <li className="pt-1">
+                  <Link to={`/locations/${l.slug}`} className="text-[0.9375rem] text-white underline decoration-white/40 underline-offset-4 hover:decoration-white">
                     {t('cta.viewClinic')}
                   </Link>
                 </li>
@@ -116,26 +124,26 @@ function Footer() {
         </div>
         <div className="grid grid-cols-2 gap-8 md:grid-cols-1">
           <div>
-            <h2 className="text-lg text-white">{t('footer.explore')}</h2>
-            <ul className="mt-3 space-y-2">
+            <h2 className="text-sm font-medium tracking-normal text-white/80">{t('footer.explore')}</h2>
+            <ul className="mt-3 space-y-1.5 text-[0.9375rem]">
               {services.slice(0, 4).map((s) => (
-                <li key={s.slug}><Link to={`/services/${s.slug}`} className="hover:text-white">{s.shortName}</Link></li>
+                <li key={s.slug}><Link to={`/services/${s.slug}`} className="text-white hover:underline">{s.shortName}</Link></li>
               ))}
-              <li><Link to="/services" className="hover:text-white">{t('cta.allServices')}</Link></li>
+              <li><Link to="/services" className="text-white hover:underline">{t('cta.allServices')}</Link></li>
             </ul>
           </div>
           <div>
-            <h2 className="text-lg text-white">{t('footer.more')}</h2>
-            <ul className="mt-3 space-y-2">
-              <li><Link to="/register" className="hover:text-white">{t('footer.register')}</Link></li>
-              <li><Link to="/careers" className="hover:text-white">{t('footer.careers')}</Link></li>
-              <li><Link to="/events" className="hover:text-white">{t('footer.events')}</Link></li>
+            <h2 className="text-sm font-medium tracking-normal text-white/80">{t('footer.more')}</h2>
+            <ul className="mt-3 space-y-1.5 text-[0.9375rem]">
+              <li><Link to="/register" className="text-white hover:underline">{t('footer.register')}</Link></li>
+              <li><Link to="/careers" className="text-white hover:underline">{t('footer.careers')}</Link></li>
+              <li><Link to="/events" className="text-white hover:underline">{t('footer.events')}</Link></li>
             </ul>
           </div>
         </div>
       </div>
-      <div className="border-t border-white/10">
-        <p className="wrap py-6 text-sm text-roha-300">{t('footer.rights', { year: new Date().getFullYear() })}</p>
+      <div className="wrap">
+        <p className="border-t border-white/20 py-6 text-sm text-white/80">{t('footer.rights', { year: new Date().getFullYear() })}</p>
       </div>
     </footer>
   );
@@ -147,10 +155,10 @@ function MobileActionBar() {
   const { pathname } = useLocation();
   if (pathname.startsWith('/book')) return null;
   return (
-    <div className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-white/95 backdrop-blur lg:hidden">
+    <div className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-white/90 backdrop-blur-md lg:hidden">
       <div className="grid grid-cols-3 gap-2 px-3 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
         {locations.map((l) => (
-          <a key={l.slug} href={`tel:${l.phoneE164}`} className="btn-ghost min-h-12 px-2 text-sm">
+          <a key={l.slug} href={`tel:${l.phoneE164}`} className="btn-ghost min-h-12 gap-1.5 px-2 text-sm">
             <Icon name="phone" className="size-4" />
             {l.city === 'Addis Ababa' ? 'Addis' : l.city}
           </a>

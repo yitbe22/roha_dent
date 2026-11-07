@@ -8,7 +8,7 @@ export function LocationPanel({ location: l, headingLevel = 'h3' }: { location: 
   const { t } = useTranslation();
   const H = headingLevel;
   return (
-    <article className="step-corner flex flex-col bg-white p-6 shadow-[0_1px_0_var(--color-line)] ring-1 ring-line sm:p-7">
+    <article className="rounded-card flex flex-col bg-white p-6 ring-1 ring-line sm:p-7">
       <H className="text-h3">{l.city}</H>
       <dl className="mt-4 space-y-3 text-ink-soft">
         <div className="flex gap-3">
