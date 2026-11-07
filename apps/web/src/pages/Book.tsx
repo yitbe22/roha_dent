@@ -28,6 +28,7 @@ export default function Book() {
       />
       <PageIntro
         crumbs={crumbs}
+        compact
         title="Book an appointment"
         lede="Choose a clinic, treatment and time. We confirm by SMS, and you pay at the clinic."
       />

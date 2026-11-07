@@ -138,3 +138,39 @@
 @utility input {
   @apply block w-full rounded-inner border border-line bg-white px-4 py-3 text-base text-ink placeholder:text-muted focus:border-sky focus:outline-none focus:ring-4 focus:ring-sky/20 aria-[invalid=true]:border-red-500;
 }
+
+/* ---------- Intro screen (first page view of a visit; see public/boot.js) ----------
+   Pure CSS with pointer-events: none, so it can never block the page, even if JS fails. */
+#loader { display: none; }
+.show-loader #loader {
+  position: fixed; inset: 0; z-index: 100;
+  display: grid; place-items: center;
+  background: var(--color-panel);
+  pointer-events: none;
+  animation: ld-lift 0.75s cubic-bezier(0.76, 0, 0.24, 1) 1.05s forwards;
+}
+#loader .ld-mark {
+  display: flex; align-items: center; gap: 1.1rem; color: #fff;
+  opacity: 0; filter: blur(14px); transform: scale(0.92);
+  animation: ld-in 0.9s var(--ease-out-soft) 0.1s forwards;
+}
+#loader img { width: clamp(3.5rem, 9vw, 5.5rem); height: auto; }
+#loader .ld-name { font: 500 clamp(1.75rem, 4vw, 2.75rem)/1.02 var(--font-display); letter-spacing: -0.02em; }
+#loader .ld-name small { display: block; margin-top: 0.4rem; font: 400 clamp(0.8rem, 1.4vw, 1rem)/1.3 var(--font-sans); letter-spacing: 0.02em; opacity: 0.8; }
+@keyframes ld-in { to { opacity: 1; filter: blur(0); transform: none; } }
+@keyframes ld-lift { to { transform: translateY(-100%); visibility: hidden; } }
+
+/* ---------- Scroll reveal ----------
+   Only hidden when boot.js added .js-reveal (motion allowed). If the app never starts,
+   the fallback shows everything after 3 s. */
+.js-reveal [data-reveal] {
+  opacity: 0;
+  transform: translateY(1.25rem);
+  filter: blur(6px);
+  transition: opacity 0.9s var(--ease-out-soft), transform 0.9s var(--ease-out-soft), filter 0.9s var(--ease-out-soft);
+  transition-delay: calc(var(--d, 0) * 90ms);
+}
+.js-reveal:not(.reveal-ready) [data-reveal] { animation: reveal-fallback 0s 3s forwards; }
+.js-reveal [data-reveal].is-in { opacity: 1; transform: none; filter: none; }
+@keyframes reveal-fallback { to { opacity: 1; transform: none; filter: none; } }
+@keyframes tx-in { from { opacity: 0; transform: translateY(0.5rem); filter: blur(4px); } }

@@ -103,7 +103,8 @@
       "summary": "Your appointment",
       "payNote": "No payment now. You pay at the clinic after your visit.",
       "captcha": "Security check",
-      "check": "Please check your appointment"
+      "check": "Please check your appointment",
+      "addNote": "Add a note for the dentist (optional)"
     },
     "errors": {
       "nameRequired": "Enter your full name (at least 2 letters).",
@@ -135,8 +136,8 @@
     "notConfigured": "Online booking is not available right now. Please call or message the clinic.",
     "choose": {
       "title": "What would you like to book?",
-      "clinic": "1. Choose a clinic",
-      "treatment": "2. Choose a treatment",
+      "clinic": "Clinic",
+      "treatment": "Treatment",
       "pickClinic": "Choose a clinic to see its treatments."
     }
   },

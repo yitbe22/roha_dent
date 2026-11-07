@@ -5,6 +5,7 @@ import { Logo } from './Logo';
 import { Icon } from './Icon';
 import { locations } from '../content/locations';
 import { services } from '../content/services';
+import { useReveal } from '../lib/useReveal';
 
 const NAV = [
   { to: '/services', key: 'nav.services' },
@@ -171,6 +172,8 @@ function MobileActionBar() {
 
 export function Layout({ children }: { children: ReactNode }) {
   const { t } = useTranslation();
+  const { pathname } = useLocation();
+  useReveal(pathname);
   return (
     <>
       <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded focus:bg-white focus:px-4 focus:py-2">

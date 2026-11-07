@@ -16,6 +16,7 @@ import { Turnstile } from './Turnstile';
 // Three steps: what & where → when (with an optional dentist filter) → who.
 const STEPS = ['choose', 'time', 'details'] as const;
 type Step = (typeof STEPS)[number] | 'done';
+const STEP_LABEL = { choose: 'booking.steps.service', time: 'booking.steps.time', details: 'booking.steps.details' } as const;
 
 type Draft = {
   locationId?: string;
@@ -106,6 +107,7 @@ export default function BookingWizard() {
   const [captcha, setCaptcha] = useState<string | null>(null);
   const [captchaKey, setCaptchaKey] = useState(0);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [showNotes, setShowNotes] = useState(false);
 
   const mutation = useMutation({
     mutationFn: createBooking,
@@ -170,7 +172,7 @@ export default function BookingWizard() {
         <span className="flex size-14 items-center justify-center rounded-full bg-gradient-to-br from-sky to-roha-700 text-white shadow-[0_10px_24px_-12px_rgb(22_52_114/0.7)]" aria-hidden="true">
           <Icon name="check" className="size-7" />
         </span>
-        <h2 id="done-h" ref={headingRef} tabIndex={-1} className="mt-6 text-h2 outline-none">
+        <h2 id="done-h" ref={headingRef} tabIndex={-1} className="mt-6 scroll-mt-32 text-h2 outline-none">
           {t(confirmed ? 'booking.done.confirmedTitle' : 'booking.done.pendingTitle')}
         </h2>
         <p className="mt-3 text-lede text-ink-soft">
@@ -200,14 +202,17 @@ export default function BookingWizard() {
   const stepIndex = STEPS.indexOf(step as (typeof STEPS)[number]);
 
   return (
-    <div className="grid gap-10 lg:grid-cols-[1fr_20rem]">
+    <div className="max-w-3xl">
       <div className="min-w-0">
-        <p className="text-sm font-semibold text-roha-600">{t('booking.stepOf', { step: stepIndex + 1, total: STEPS.length })}</p>
-        <div className="mt-2 flex gap-1.5" aria-hidden="true">
+        <p className="sr-only">{t('booking.stepOf', { step: stepIndex + 1, total: STEPS.length })}</p>
+        <ol className="grid grid-cols-3 gap-2" aria-hidden="true">
           {STEPS.map((s, i) => (
-            <span key={s} className={`h-1.5 flex-1 rounded-full ${i <= stepIndex ? 'bg-roha-700' : 'bg-mist'}`} />
+            <li key={s} className={`text-sm ${i === stepIndex ? 'font-medium text-roha-700' : i < stepIndex ? 'text-roha-600' : 'text-muted'}`}>
+              <span className={`mb-2 block h-1 rounded-full transition-colors duration-500 ${i <= stepIndex ? 'bg-gradient-to-r from-sky to-roha-700' : 'bg-mist'}`} />
+              {t(STEP_LABEL[s])}
+            </li>
           ))}
-        </div>
+        </ol>
 
         {notice && (
           <p role="alert" className="mt-6 rounded-lg border border-adey bg-adey-soft px-4 py-3 font-medium text-roha-900">{notice}</p>
@@ -217,9 +222,9 @@ export default function BookingWizard() {
           <StepShell title={t('booking.choose.title')} headingRef={headingRef}>
             {c.locations.length > 1 && (
               <>
-                <h3 className="mb-3 text-lg font-bold text-roha-900">{t('booking.choose.clinic')}</h3>
-                <Choices
-                  items={c.locations.map((l) => ({ id: l.id, title: l.city, body: l.phone }))}
+                <h3 className="mb-3 font-display text-lg font-medium text-ink">{t('booking.choose.clinic')}</h3>
+                <Pills
+                  items={c.locations.map((l) => ({ id: l.id, title: l.city }))}
                   selected={draft.locationId}
                   onSelect={(id) => {
                     const keepService = draft.serviceId && dentistsFor(c, id, draft.serviceId).length;
@@ -228,15 +233,14 @@ export default function BookingWizard() {
                 />
               </>
             )}
-            <h3 className={`mb-1 text-lg font-bold text-roha-900 ${c.locations.length > 1 ? 'mt-8' : ''}`}>{t('booking.choose.treatment')}</h3>
+            <h3 className={`mb-3 font-display text-lg font-medium text-ink ${c.locations.length > 1 ? 'mt-9' : ''}`}>{t('booking.choose.treatment')}</h3>
             {!draft.locationId ? (
               <p className="text-ink-soft">{t('booking.choose.pickClinic')}</p>
             ) : (
               <>
-                <p className="mb-3 text-ink-soft">{t('booking.service.hint')}</p>
                 <Choices
                   items={servicesHere.map((s) => ({
-                    id: s.id, title: s.name, body: s.summary ?? '', meta: t('common.minutes', { count: s.duration_minutes }),
+                    id: s.id, title: s.name, meta: t('common.minutes', { count: s.duration_minutes }),
                   }))}
                   selected={draft.serviceId}
                   onSelect={(id) => {
@@ -244,6 +248,7 @@ export default function BookingWizard() {
                     goto('time');
                   }}
                 />
+                <p className="mt-4 text-sm">{t('booking.service.hint')}</p>
               </>
             )}
           </StepShell>
@@ -255,9 +260,10 @@ export default function BookingWizard() {
               <p className="text-ink-soft">{t('booking.dentist.none')}</p>
             ) : (
               <>
+                <Picked onChange={() => goto('choose')}>{service?.name} · {location?.city}</Picked>
                 {dentistsHere.length > 1 && (
                   <label className="mb-6 flex flex-wrap items-center gap-3">
-                    <span className="font-semibold text-roha-900">{t('booking.time.dentist')}</span>
+                    <span className="font-medium text-ink">{t('booking.time.dentist')}</span>
                     <select className="input w-full py-2.5 sm:w-auto sm:min-w-64" value={draft.dentistId}
                       onChange={(e) => setDraft((d) => ({ ...d, dentistId: e.target.value, date: undefined, slot: undefined }))}>
                       <option value="any">{t('booking.dentist.any')}</option>
@@ -289,22 +295,23 @@ export default function BookingWizard() {
         {step === 'details' && draft.slot && (
           <StepShell title={t('booking.details.title')} headingRef={headingRef} onBack={() => goto('time')}>
             {/* What they are booking — always above the button, also on phones */}
-            <div className="rounded-card mb-8 max-w-xl bg-mist p-5">
-              <p className="text-sm font-semibold text-ink-soft">{t('booking.details.check')}</p>
-              <p className="mt-1 text-lg font-bold text-roha-900">{when(draft.slot)}</p>
-              <p className="text-roha-900">
-                {service?.name} · {location?.city} · {draft.dentistId === 'any' ? t('booking.dentist.any') : dentist?.full_name}
-              </p>
-              <button type="button" onClick={() => goto('time')} className="mt-2 text-sm font-semibold text-roha-600 hover:underline">
+            <div className="mb-8 flex max-w-xl items-start justify-between gap-4 rounded-card bg-page p-5 ring-1 ring-line">
+              <div>
+                <p className="font-display text-lg font-medium text-ink">{when(draft.slot)}</p>
+                <p className="mt-1 text-[0.9375rem]">
+                  {service?.name} · {location?.city} · {draft.dentistId === 'any' ? t('booking.dentist.any') : dentist?.full_name}
+                </p>
+              </div>
+              <button type="button" onClick={() => goto('time')} className="link shrink-0 text-sm">
                 {t('booking.change')}
               </button>
             </div>
 
             <form onSubmit={onSubmit} noValidate className="max-w-xl space-y-5">
-              <Field id="fullName" label={t('booking.details.name')} hint={t('booking.details.nameHint')}
+              <Field id="fullName" label={t('booking.details.name')}
                 error={form.formState.errors.fullName?.message && t(`booking.errors.${form.formState.errors.fullName.message}`)}>
                 <input id="fullName" autoComplete="name" maxLength={100} className="input" aria-invalid={!!form.formState.errors.fullName}
-                  aria-describedby={`fullName-hint${form.formState.errors.fullName ? ' fullName-error' : ''}`} {...form.register('fullName')} />
+                  aria-describedby={form.formState.errors.fullName ? 'fullName-error' : undefined} {...form.register('fullName')} />
               </Field>
               <Field id="phone" label={t('booking.details.phone')} hint={t('booking.details.phoneHint')}
                 error={form.formState.errors.phone?.message && t(`booking.errors.${form.formState.errors.phone.message}`)}>
@@ -312,9 +319,15 @@ export default function BookingWizard() {
                   className="input tabular-nums" aria-invalid={!!form.formState.errors.phone}
                   aria-describedby={`phone-hint${form.formState.errors.phone ? ' phone-error' : ''}`} {...form.register('phone')} />
               </Field>
-              <Field id="notes" label={t('booking.details.notes')} hint={t('booking.details.notesHint')}>
-                <textarea id="notes" aria-describedby="notes-hint" rows={3} maxLength={500} className="input" {...form.register('notes')} />
-              </Field>
+              {showNotes ? (
+                <Field id="notes" label={t('booking.details.notes')} hint={t('booking.details.notesHint')}>
+                  <textarea id="notes" aria-describedby="notes-hint" rows={3} maxLength={500} className="input" autoFocus {...form.register('notes')} />
+                </Field>
+              ) : (
+                <button type="button" onClick={() => setShowNotes(true)} className="inline-flex min-h-11 items-center gap-2 text-[0.9375rem] font-medium text-roha-700 hover:underline">
+                  <Icon name="plus" className="size-4" /> {t('booking.details.addNote')}
+                </button>
+              )}
               {/* Honeypot — hidden from people and screen readers */}
               <div aria-hidden="true" className="absolute -left-[9999px] h-0 overflow-hidden">
                 <label htmlFor="website">Website</label>
@@ -329,7 +342,7 @@ export default function BookingWizard() {
                 <p role="alert" className="rounded-lg border border-red-300 bg-red-50 px-4 py-3 text-red-900">{submitError}</p>
               )}
 
-              <button type="submit" className="btn-primary w-full text-lg sm:w-auto sm:px-8" disabled={mutation.isPending}>
+              <button type="submit" className="btn-primary w-full text-[1.0625rem] sm:w-auto sm:px-10" disabled={mutation.isPending}>
                 {mutation.isPending ? t('booking.details.submitting') : t('booking.details.submit')}
               </button>
               <p className="text-sm text-ink-soft">{t('booking.details.payNote')}</p>
@@ -338,21 +351,6 @@ export default function BookingWizard() {
         )}
       </div>
 
-      {/* Running summary (desktop only — on phones the details step shows it above the form) */}
-      <aside className="hidden lg:sticky lg:top-28 lg:block lg:self-start">
-        <div className="rounded-card bg-mist p-5">
-          <h2 className="font-bold text-roha-900">{t('booking.details.summary')}</h2>
-          <dl className="mt-3 divide-y divide-roha-200">
-            <SummaryRow label={t('booking.steps.location')} value={location?.city} onChange={() => goto('choose')} />
-            <SummaryRow label={t('booking.steps.service')} value={step !== 'choose' ? service?.name : undefined} onChange={() => goto('choose')} />
-            <SummaryRow label={t('booking.steps.dentist')}
-              value={step !== 'choose' ? (draft.dentistId === 'any' ? t('booking.dentist.any') : dentist?.full_name) : undefined}
-              onChange={() => goto('time')} />
-            <SummaryRow label={t('booking.steps.time')} value={draft.slot && step === 'details' ? when(draft.slot) : undefined}
-              onChange={() => goto('time')} />
-          </dl>
-        </div>
-      </aside>
     </div>
   );
 }
@@ -365,25 +363,26 @@ function StepShell(props: {
 }) {
   const { t } = useTranslation();
   return (
-    <section className="mt-6 scroll-mt-24">
+    <section className="mt-9 scroll-mt-24">
       {props.onBack && (
-        <button type="button" onClick={props.onBack} className="mb-3 text-sm font-semibold text-roha-600 hover:underline">
+        <button type="button" onClick={props.onBack} className="mb-3 text-sm font-medium text-roha-600 hover:underline">
           ‹ {t('booking.back')}
         </button>
       )}
-      <h2 ref={props.headingRef} tabIndex={-1} className="text-h2 outline-none">{props.title}</h2>
+      <h2 ref={props.headingRef} tabIndex={-1} className="scroll-mt-32 font-display text-[clamp(1.625rem,3vw,2.25rem)] leading-tight outline-none">{props.title}</h2>
       <div className="mt-6">{props.children}</div>
     </section>
   );
 }
 
+/** Treatments: one compact row each (name + length). */
 function Choices({ items, selected, onSelect }: {
-  items: { id: string; title: string; body?: string; meta?: string }[];
+  items: { id: string; title: string; meta?: string }[];
   selected?: string;
   onSelect: (id: string) => void;
 }) {
   return (
-    <ul className="grid gap-3 sm:grid-cols-2">
+    <ul className="grid gap-2 sm:grid-cols-2">
       {items.map((i) => {
         const on = i.id === selected;
         return (
@@ -392,15 +391,12 @@ function Choices({ items, selected, onSelect }: {
               type="button"
               aria-pressed={on}
               onClick={() => onSelect(i.id)}
-              className={`flex h-full w-full items-start justify-between gap-4 rounded-xl border-2 p-4 text-left transition-colors ${
-                on ? 'border-roha-700 bg-roha-50' : 'border-line bg-white hover:border-roha-300'
+              className={`flex min-h-14 w-full items-center justify-between gap-4 rounded-card border px-4 py-3 text-left transition-colors ${
+                on ? 'border-roha-700 bg-roha-50 ring-1 ring-roha-700' : 'border-line bg-white hover:border-sky'
               }`}
             >
-              <span>
-                <span className="block text-lg font-bold text-roha-900">{i.title}</span>
-                {i.body && <span className="mt-1 block text-ink-soft">{i.body}</span>}
-              </span>
-              {i.meta && <span className="shrink-0 text-sm font-semibold text-roha-600">{i.meta}</span>}
+              <span className="font-medium text-ink">{i.title}</span>
+              {i.meta && <span className="shrink-0 text-sm tabular-nums text-roha-600">{i.meta}</span>}
             </button>
           </li>
         );
@@ -409,32 +405,55 @@ function Choices({ items, selected, onSelect }: {
   );
 }
 
+/** Clinics: a short row of pills. */
+function Pills({ items, selected, onSelect }: {
+  items: { id: string; title: string }[];
+  selected?: string;
+  onSelect: (id: string) => void;
+}) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      {items.map((i) => {
+        const on = i.id === selected;
+        return (
+          <button
+            key={i.id}
+            type="button"
+            aria-pressed={on}
+            onClick={() => onSelect(i.id)}
+            className={`inline-flex min-h-12 items-center gap-2 rounded-full border px-5 font-medium transition-colors ${
+              on ? 'border-roha-700 bg-roha-700 text-white' : 'border-line bg-white text-ink hover:border-sky'
+            }`}
+          >
+            {on && <Icon name="check" className="size-4" />}
+            {i.title}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/** One line recalling an earlier choice, with a way back. */
+function Picked({ children, onChange }: { children: React.ReactNode; onChange: () => void }) {
+  const { t } = useTranslation();
+  return (
+    <p className="mb-6 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-card bg-page px-4 py-2.5 text-[0.9375rem] text-ink ring-1 ring-line sm:inline-flex sm:rounded-full">
+      <span>{children}</span>
+      <button type="button" onClick={onChange} className="link text-sm">{t('booking.change')}</button>
+    </p>
+  );
+}
+
 function Field({ id, label, hint, error, children }: {
   id: string; label: string; hint?: string; error?: string | false; children: React.ReactNode;
 }) {
   return (
     <div>
-      <label htmlFor={id} className="block font-semibold text-roha-900">{label}</label>
+      <label htmlFor={id} className="block font-medium text-ink">{label}</label>
       {hint && <p id={`${id}-hint`} className="text-sm text-ink-soft">{hint}</p>}
       <div className="mt-2">{children}</div>
       {error && <p id={`${id}-error`} role="alert" className="mt-1.5 text-sm font-medium text-red-800">{error}</p>}
-    </div>
-  );
-}
-
-function SummaryRow({ label, value, onChange }: { label: string; value?: string; onChange: () => void }) {
-  const { t } = useTranslation();
-  return (
-    <div className="flex items-start justify-between gap-3 py-2.5">
-      <div>
-        <dt className="text-xs font-semibold text-ink-soft">{label}</dt>
-        <dd className={value ? 'font-semibold text-roha-900' : 'text-ink-soft/70'}>{value ?? '—'}</dd>
-      </div>
-      {value && (
-        <button type="button" onClick={onChange} className="text-sm font-semibold text-roha-600 hover:underline">
-          {t('booking.change')}
-        </button>
-      )}
     </div>
   );
 }
