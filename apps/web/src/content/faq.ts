@@ -6,7 +6,7 @@ export const faqGroups: FaqGroup[] = [
     items: [
       {
         q: 'How do I book an appointment?',
-        a: 'Choose a clinic, treatment and time on the booking page, then enter your name and phone number. You will get an SMS when we receive your request and another when it is confirmed. You can also call either clinic.',
+        a: 'Choose a clinic, treatment and time on the booking page, then enter your name and phone number. We send you an SMS once your appointment is confirmed. You can also call either clinic.',
       },
       {
         q: 'Can I change or cancel my appointment?',

@@ -111,7 +111,9 @@ export default function NewAppointmentPage() {
   const ready = missing.length === 0 && !!locationId;
 
   const smsText = useMemo(() => {
-    const tpl = templates.data?.find((t) => t.key === (status === 'confirmed' ? 'booking_confirmed' : 'booking_received'));
+    // Patients only get a text once a booking is confirmed (or cancelled) — migration 0016.
+    if (status !== 'confirmed') return null;
+    const tpl = templates.data?.find((t) => t.key === 'booking_confirmed');
     if (!tpl || !tpl.is_active || !ready) return null;
     const loc = lk?.location(locationId);
     return renderTemplate(tpl.body, {
@@ -210,7 +212,7 @@ export default function NewAppointmentPage() {
             <div className="mt-5">
               <Choice label="Booking status" value={status} onChange={setStatus} options={[
                 { value: 'confirmed', title: 'Confirmed', text: 'The time is agreed.' },
-                { value: 'pending', title: 'Confirm later', text: 'Still needs a call-back.' },
+                { value: 'pending', title: 'Confirm later', text: 'Still needs a call-back. No text is sent until you confirm.' },
               ]} />
             </div>
 

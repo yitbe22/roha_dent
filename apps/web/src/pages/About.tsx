@@ -29,7 +29,7 @@ export default function About() {
         media={<IntroPhoto src="/img/clinic-room.webp" alt="A Roha treatment room with a blue and white dental chair" width={667} height={889} />}
       />
 
-      <section aria-labelledby="story-h" className="wrap mt-[clamp(3rem,7vw,6rem)] grid gap-10 lg:grid-cols-[1fr_2fr] lg:gap-16">
+      <section id="our-story" aria-labelledby="story-h" className="wrap mt-[clamp(3rem,7vw,6rem)] grid gap-10 lg:grid-cols-[1fr_2fr] lg:gap-16">
         <h2 id="story-h" data-reveal className="text-h2 max-w-[10ch]">Why “Roha”</h2>
         <div data-reveal style={stagger(1)} className="flex max-w-[40rem] flex-col gap-5 text-lg leading-relaxed text-ink">
           <p>
@@ -43,7 +43,7 @@ export default function About() {
         </div>
       </section>
 
-      <section aria-labelledby="commit-h" className="wrap mt-[clamp(4rem,9vw,7.5rem)]">
+      <section id="our-commitments" aria-labelledby="commit-h" className="wrap mt-[clamp(4rem,9vw,7.5rem)]">
         <div className="on-blue rounded-panel bg-roha-700 p-[clamp(1.5rem,5vw,4rem)] text-white">
           <h2 id="commit-h" data-reveal className="text-h2 max-w-[14ch] text-white">What you can expect</h2>
           <dl className="mt-[clamp(2rem,4vw,3rem)] grid sm:grid-cols-2 lg:grid-cols-4">

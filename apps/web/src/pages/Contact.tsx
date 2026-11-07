@@ -34,7 +34,7 @@ export default function Contact() {
         ))}
       </div>
 
-      <section aria-labelledby="urgent-h" className="wrap mt-[clamp(3rem,7vw,5rem)]">
+      <section id="urgent-care" aria-labelledby="urgent-h" className="wrap mt-[clamp(3rem,7vw,5rem)]">
         <div data-reveal className="grid gap-6 rounded-panel bg-page p-[clamp(1.5rem,4vw,2.75rem)] ring-1 ring-line lg:grid-cols-[1.3fr_1fr] lg:items-center">
           <div>
             <h2 id="urgent-h" className="text-[clamp(1.5rem,2.6vw,2rem)] leading-tight">Tooth pain or a broken tooth?</h2>

@@ -1,5 +1,5 @@
 import { Seo } from '../lib/seo';
-import { breadcrumbLd } from '../lib/schema';
+import { breadcrumbLd, servicesListLd } from '../lib/schema';
 import { stagger } from '../lib/useReveal';
 import { PageIntro } from '../components/PageIntro';
 import { TreatmentGrid } from '../components/TreatmentGrid';
@@ -19,7 +19,7 @@ export default function Services() {
         title="Dental Services in Addis Ababa & Gonder"
         description="Teeth cleaning, whitening, clear aligners and braces, root canal treatment, E.max and ceramic crowns, and removable dentures at Roha Speciality Dental Center."
         path="/services"
-        jsonLd={[breadcrumbLd(crumbs)]}
+        jsonLd={[breadcrumbLd(crumbs), servicesListLd()]}
       />
       <PageIntro
         crumbs={crumbs}
@@ -27,11 +27,11 @@ export default function Services() {
         lede="From a routine cleaning to crowns and aligners. Open a treatment to see who it is for, what happens at the visit and how long it takes."
       />
 
-      <section aria-label="All treatments" className="wrap mt-[clamp(2.5rem,5vw,4rem)]">
+      <section id="all-treatments" aria-label="All treatments" className="wrap mt-[clamp(2.5rem,5vw,4rem)]">
         <TreatmentGrid headingLevel="h2" />
       </section>
 
-      <section aria-labelledby="how-h" className="wrap mt-[clamp(4rem,9vw,7.5rem)] grid gap-10 lg:grid-cols-[1fr_2fr] lg:gap-16">
+      <section id="how-it-works" aria-labelledby="how-h" className="wrap mt-[clamp(4rem,9vw,7.5rem)] grid gap-10 lg:grid-cols-[1fr_2fr] lg:gap-16">
         <h2 id="how-h" data-reveal className="text-h2 max-w-[12ch]">How treatment works here</h2>
         <ol className="grid border-t border-line sm:grid-cols-3">
           {promises.map(([title, body], i) => (

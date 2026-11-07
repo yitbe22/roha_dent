@@ -4,6 +4,7 @@ import { ArrowUpRight, Clock } from 'lucide-react';
 import { services } from '../content/services';
 import { stagger } from '../lib/useReveal';
 import { Badge } from '@/components/ui/badge';
+import { srcSet } from '../lib/img';
 
 /**
  * Every treatment as a plain card that opens its page; the last card is the
@@ -18,8 +19,14 @@ export function TreatmentGrid({ headingLevel = 'h3' }: { headingLevel?: 'h2' | '
         <li key={s.slug} data-reveal style={stagger(i % 4)} className="grid">
           <Link
             to={`/services/${s.slug}`}
-            className="group relative flex min-h-60 flex-col rounded-card bg-white p-6 ring-1 ring-line transition-[box-shadow,transform] duration-300 ease-out-soft hover:-translate-y-1 hover:shadow-[0_18px_40px_-24px_rgb(15_35_80/0.45)] hover:ring-roha-300 focus-visible:ring-2 focus-visible:ring-ring"
+            className="group relative flex min-h-60 flex-col overflow-hidden rounded-card bg-white ring-1 ring-line transition-[box-shadow,transform] duration-300 ease-out-soft hover:-translate-y-1 hover:shadow-[0_18px_40px_-24px_rgb(15_35_80/0.45)] hover:ring-roha-300 focus-visible:ring-2 focus-visible:ring-ring"
           >
+            <span className="block overflow-hidden" aria-hidden="true">
+              <img src={s.image} srcSet={srcSet(s.image, 1200)} sizes="(min-width: 1024px) 18rem, (min-width: 640px) 50vw, 100vw"
+                alt="" width={1200} height={800} loading="lazy" decoding="async"
+                className="aspect-[3/2] w-full object-cover transition-transform duration-700 ease-out-soft group-hover:scale-[1.04]" />
+            </span>
+            <div className="flex flex-1 flex-col p-6">
             <div className="flex items-start justify-between gap-3">
               <Badge variant="secondary" className="tabular-nums">
                 <Clock data-icon="inline-start" />
@@ -29,14 +36,15 @@ export function TreatmentGrid({ headingLevel = 'h3' }: { headingLevel?: 'h2' | '
                 <ArrowUpRight className="size-4" />
               </span>
             </div>
-            <H className="mt-auto pt-10 font-display text-[1.375rem] leading-tight text-ink">{s.shortName}</H>
+            <H className="mt-auto pt-6 font-display text-[1.375rem] leading-tight text-ink">{s.shortName}</H>
             <p className="mt-2 text-[0.9375rem] leading-relaxed">{s.summary}</p>
+            </div>
           </Link>
         </li>
       ))}
       <li data-reveal style={stagger(3)} className="grid">
         <Link
-          to="/book?service=scaling"
+          to="/book?service=checkup"
           className="group on-blue flex min-h-60 flex-col rounded-card bg-roha-700 p-6 text-white transition-[box-shadow,transform] duration-300 ease-out-soft hover:-translate-y-1 hover:shadow-[0_18px_40px_-20px_rgb(15_35_80/0.7)]"
         >
           <span className="grid size-9 place-items-center self-end rounded-full bg-adey text-roha-900 transition-transform duration-300 group-hover:rotate-45" aria-hidden="true">

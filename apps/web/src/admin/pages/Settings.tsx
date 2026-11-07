@@ -25,10 +25,9 @@ const PLACEHOLDER_LABEL: Record<(typeof TEMPLATE_PLACEHOLDERS)[number], string> 
 };
 
 const SMS_HINT: Partial<Record<SmsType, string>> = {
-  booking_received: 'Sent to the patient right after an online request (or a pending phone booking).',
-  booking_confirmed: 'Sent when staff confirm a booking, or when a booking is created as confirmed.',
+  booking_confirmed: 'Sent when staff confirm a booking, or when a booking is created as confirmed. Patients get no text before this.',
   booking_cancelled: 'Sent when a booking is cancelled (by staff or by the patient’s link).',
-  booking_rescheduled: 'Sent when the time of a booking changes.',
+  booking_rescheduled: 'Sent when the time of a confirmed booking changes.',
   clinic_new_booking: 'Sent to the clinic alert phone(s) for every new online booking.',
 };
 

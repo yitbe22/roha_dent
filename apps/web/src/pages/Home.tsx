@@ -1,20 +1,25 @@
-import { Fragment, type CSSProperties, type ReactNode } from 'react';
+import { Fragment, useRef, type CSSProperties, type ReactNode } from 'react';
 import { Link } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { Seo } from '../lib/seo';
-import { organizationLd, dentistLd } from '../lib/schema';
+import { organizationLd, dentistLd, websiteLd } from '../lib/schema';
 import { locations } from '../content/locations';
 import { services } from '../content/services';
 import { dentists } from '../content/dentists';
 import { faqGroups } from '../content/faq';
 import { LocationPanel } from '../components/LocationPanel';
 import { TreatmentGrid } from '../components/TreatmentGrid';
+import { BeforeAfter } from '../components/BeforeAfter';
+import { beforeAfterCases } from '../content/beforeAfter';
 import { CalendarDays, MapPin } from 'lucide-react';
-import { Monogram } from '../components/Monogram';
+import { DentistAvatar } from '../components/DentistAvatar';
 import { HeroTooth } from '../components/hero/HeroTooth';
 import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { stagger } from '../lib/useReveal';
+import { useGrowPanel } from '../lib/scrollFx';
+import { CtaBand } from '../components/CtaBand';
+import { CountUp } from '../components/CountUp';
 
 const HERO_TITLE = 'Specialist dental care in Addis Ababa and Gonder';
 
@@ -30,6 +35,9 @@ function SectionHead({ id, title, children }: { id: string; title: string; child
 export default function Home() {
   const { t } = useTranslation();
   const faqPreview = faqGroups[0].items.slice(0, 3);
+  const aboutPanel = useRef<HTMLDivElement>(null);
+  const aboutBg = useRef<HTMLImageElement>(null);
+  useGrowPanel(aboutPanel, aboutBg);
   const facts = [
     { value: String(locations.length), label: 'Clinics, in Addis Ababa and Gonder' },
     { value: String(services.length), label: 'Treatments, from cleaning to crowns' },
@@ -40,14 +48,14 @@ export default function Home() {
   return (
     <>
       <Seo
-        title="Roha Speciality Dental Center | Dentist in Addis Ababa & Gonder"
+        title="Roha Dental | Dentist in Addis Ababa & Gonder"
         description="Teeth cleaning, whitening, clear aligners, root canal treatment, crowns and dentures in Addis Ababa and Gonder. Book online in a minute or call the clinic."
         path="/"
-        jsonLd={[organizationLd(), ...locations.map(dentistLd)]}
+        jsonLd={[websiteLd(), organizationLd(), ...locations.map(dentistLd)]}
       />
 
       {/* Hero */}
-      <section className="hero overflow-hidden">
+      <section id="top" className="hero overflow-hidden">
         <div className="wrap grid items-center gap-10 pt-8 pb-[clamp(3rem,7vw,6rem)] lg:grid-cols-[1.1fr_1fr] lg:gap-16 lg:pt-14">
           <div>
             <h1 data-reveal className="text-h1 max-w-[13ch]">
@@ -81,9 +89,9 @@ export default function Home() {
       </section>
 
       {/* About: the clinic itself */}
-      <section aria-labelledby="about-h" className="wrap">
-        <div data-reveal className="on-blue relative isolate flex min-h-[36rem] flex-col justify-between overflow-hidden rounded-panel text-white">
-          <img src="/img/clinic-hallway.webp" alt="" width={1284} height={856} loading="lazy"
+      <section id="about" aria-labelledby="about-h" className="wrap">
+        <div ref={aboutPanel} className="on-blue relative isolate flex min-h-[36rem] origin-center flex-col justify-between overflow-hidden rounded-panel text-white will-change-transform">
+          <img ref={aboutBg} src="/img/clinic-hallway.webp" alt="" width={1284} height={856} loading="lazy"
             className="absolute inset-0 -z-20 h-full w-full object-cover" />
           <div className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgb(29_62_130/0.9)_0%,rgb(42_82_158/0.66)_50%,rgb(25_55_120/0.9)_100%)]" aria-hidden="true" />
           <div className="max-w-2xl p-[clamp(1.5rem,4vw,2.75rem)]">
@@ -98,7 +106,7 @@ export default function Home() {
               <div key={f.label} data-reveal style={stagger(i + 2)}
                 className="flex flex-col-reverse justify-end border-white/15 px-[clamp(1.25rem,3vw,2.75rem)] py-6 odd:border-r max-lg:nth-[n+3]:border-t lg:border-r lg:last:border-r-0 sm:py-8">
                 <dt className="mt-2 max-w-[22ch] text-sm text-white/80">{f.label}</dt>
-                <dd className="before:mb-5 before:block before:h-0.5 before:w-7 before:rounded-full before:bg-adey before:content-[''] font-display text-[clamp(1.625rem,3.6vw,3rem)] leading-none font-medium tracking-[-0.03em] whitespace-nowrap tabular-nums">{f.value}</dd>
+                <dd className="before:mb-5 before:block before:h-0.5 before:w-7 before:rounded-full before:bg-adey before:content-[''] font-display text-[clamp(1.625rem,3.6vw,3rem)] leading-none font-medium tracking-[-0.03em] whitespace-nowrap tabular-nums"><CountUp value={f.value} /></dd>
               </div>
             ))}
           </dl>
@@ -106,7 +114,7 @@ export default function Home() {
       </section>
 
       {/* Clinics */}
-      <section aria-labelledby="clinics-h" className="wrap section-y">
+      <section id="clinics" aria-labelledby="clinics-h" className="wrap section-y">
         <SectionHead id="clinics-h" title="Choose your clinic" />
         <p data-reveal style={stagger(1)} className="mt-4 max-w-2xl">
           Both clinics are open Monday to Saturday. Call, message us on WhatsApp, or book a time online.
@@ -121,7 +129,7 @@ export default function Home() {
       </section>
 
       {/* Treatments */}
-      <section aria-labelledby="services-h" className="section-y bg-page">
+      <section id="treatments" aria-labelledby="services-h" className="section-y bg-page">
         <div className="wrap">
           <SectionHead id="services-h" title="Treatments">
             <Link to="/services" className="link">{t('cta.allServices')}</Link>
@@ -135,8 +143,24 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Before and after (illustrative until real, consented cases replace it) */}
+      {beforeAfterCases.length > 0 && (
+        <section id="before-and-after" aria-labelledby="ba-h" className="wrap section-y grid items-center gap-10 lg:grid-cols-[1fr_1.4fr] lg:gap-16">
+          <div data-reveal>
+            <h2 id="ba-h" className="text-h2 max-w-[14ch]">{t('beforeAfter.heading')}</h2>
+            <p className="mt-5 max-w-md">
+              Drag the handle to compare. At your visit the dentist records your starting shade, so you can see the change for yourself.
+            </p>
+            <Link to={`/services/${beforeAfterCases[0].service}`} className="link mt-6 inline-block">About tooth whitening</Link>
+          </div>
+          <div data-reveal style={stagger(1)}>
+            <BeforeAfter item={beforeAfterCases[0]} />
+          </div>
+        </section>
+      )}
+
       {/* How booking works: a true sequence, so it is numbered */}
-      <section aria-labelledby="how-h" className="wrap section-y">
+      <section id="how-booking-works" aria-labelledby="how-h" className="wrap section-y">
         <div data-reveal className="on-blue grid gap-10 rounded-panel bg-panel p-[clamp(1.5rem,4.5vw,3.5rem)] text-white lg:grid-cols-[1fr_2fr] lg:gap-14">
           <div>
             <h2 id="how-h" className="text-h2 text-white">Booking takes about a minute</h2>
@@ -149,7 +173,7 @@ export default function Home() {
             {[
               ['Choose', 'Pick your clinic, the treatment and a dentist, or let us choose whoever is free.'],
               ['Pick a time', 'See the open times for the day you want and tap one.'],
-              ['Get the SMS', 'We text you when we receive the request and again when it is confirmed.'],
+              ['Get the SMS', 'We text you once the clinic confirms your time.'],
             ].map(([title, body], i) => (
               <li key={title} className="border-t border-white/25 py-6 sm:border-t-0 sm:border-l sm:px-6 sm:py-1 sm:first:border-l-0 sm:first:pl-0">
                 <span className="font-display text-[3.5rem] leading-none font-medium tracking-[-0.04em] text-adey tabular-nums">{i + 1}</span>
@@ -162,7 +186,7 @@ export default function Home() {
       </section>
 
       {/* Dentists */}
-      <section aria-labelledby="team-h" className="wrap">
+      <section id="dentists" aria-labelledby="team-h" className="wrap">
         <SectionHead id="team-h" title="Your dentists">
           <Link to="/doctors" className="link">Meet the team</Link>
         </SectionHead>
@@ -171,8 +195,8 @@ export default function Home() {
             <li key={d.slug} data-reveal style={stagger(i + 1)} className="grid">
               <Link to={`/doctors#${d.slug}`}
                 className="group flex flex-col rounded-card bg-white p-6 ring-1 ring-line transition-[box-shadow,transform] duration-300 ease-out-soft hover:-translate-y-1 hover:shadow-[0_18px_40px_-24px_rgb(15_35_80/0.45)] hover:ring-roha-300">
-                <Monogram name={d.name} className="size-16 text-xl" />
-                <span className="mt-8 font-display text-xl leading-tight text-ink">{d.name}</span>
+                <DentistAvatar dentist={d} shape="tile" className="aspect-[4/5] w-full text-3xl" />
+                <span className="mt-5 font-display text-xl leading-tight text-ink">{d.name}</span>
                 <span className="mt-1.5 text-[0.9375rem]">{d.title}</span>
                 <span className="mt-4 flex items-center gap-1.5 text-sm text-roha-600">
                   <MapPin className="size-4" aria-hidden="true" />
@@ -185,7 +209,7 @@ export default function Home() {
       </section>
 
       {/* FAQ preview */}
-      <section aria-labelledby="faq-h" className="wrap grid gap-8 pt-[clamp(4rem,9vw,7.5rem)] lg:grid-cols-[1fr_2fr] lg:gap-14">
+      <section id="faq" aria-labelledby="faq-h" className="wrap grid gap-8 pt-[clamp(4rem,9vw,7.5rem)] lg:grid-cols-[1fr_2fr] lg:gap-14">
         <div data-reveal>
           <h2 id="faq-h" className="text-h2">Before you book</h2>
           <Link to="/faq" className="link mt-5 inline-block">All questions</Link>
@@ -199,6 +223,8 @@ export default function Home() {
           ))}
         </Accordion>
       </section>
+
+      <CtaBand />
     </>
   );
 }

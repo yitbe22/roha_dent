@@ -9,7 +9,7 @@ import { locations } from '../content/locations';
 import { getService } from '../content/services';
 import { PageIntro } from '../components/PageIntro';
 import { CtaBand } from '../components/CtaBand';
-import { Monogram } from '../components/Monogram';
+import { DentistAvatar } from '../components/DentistAvatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
@@ -35,7 +35,7 @@ export default function Doctors() {
           <li key={d.slug} id={d.slug} data-reveal style={stagger(i % 2)} className="grid scroll-mt-24">
             <Card>
               <CardContent className="grid gap-6 sm:grid-cols-[8.5rem_1fr]">
-                <Monogram name={d.name} shape="tile" className="aspect-[4/5] w-28 text-4xl sm:w-full" />
+                <DentistAvatar dentist={d} shape="tile" className="aspect-[4/5] w-28 text-4xl sm:w-full" />
                 <div className="min-w-0">
                   <h2 className="font-display text-[1.625rem] leading-tight">{d.name}</h2>
                   <p className="mt-1 font-medium text-roha-600">{d.title}</p>

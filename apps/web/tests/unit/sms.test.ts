@@ -41,7 +41,6 @@ describe('renderTemplate', () => {
 describe('default English templates stay GSM-7 (cheap) with realistic values', () => {
   // Same text as migration 0006.
   const templates = {
-    booking_received: 'Roha Dental: Hi {patient_name}, we received your request for {service} on {date} at {time}, {location}. We will confirm by SMS. Manage: {manage_link}',
     booking_confirmed: 'Roha Dental: {patient_name}, your {service} appointment is confirmed for {date} at {time}, {location}. Change or cancel: {manage_link}',
   };
   for (const [key, body] of Object.entries(templates)) {

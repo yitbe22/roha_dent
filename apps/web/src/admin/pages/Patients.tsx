@@ -6,9 +6,11 @@ import { errorMessage } from '../data';
 import type { Patient } from '../types';
 import { Empty, ErrorBox, Loading, PageHeader, Phone, fmtDateTime, inputCls, useDebounced } from '../ui';
 import { Icon } from '../../components/Icon';
+import { ClearHistoryButton, RowCheck, SelectionBar, useSelection } from './ClearHistory';
 
 export default function PatientsPage() {
   const [text, setText] = useState('');
+  const sel = useSelection();
   const q = useDebounced(text.trim(), 300);
 
   const res = useQuery({
@@ -33,7 +35,8 @@ export default function PatientsPage() {
 
   return (
     <>
-      <PageHeader title="Patients" subtitle="Everyone who has booked at your clinic. One record per phone number." />
+      <PageHeader title="Patients" subtitle="Everyone who has booked at your clinic. One record per phone number."
+        actions={<ClearHistoryButton kind="patients" />} />
       <div className="relative mb-4 max-w-md">
         <Icon name="search" className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-ink-soft" />
         <input className={`${inputCls} pl-9`} type="search" placeholder="Search name or phone…" value={text}
@@ -46,9 +49,12 @@ export default function PatientsPage() {
       ) : res.data.length === 0 ? (
         <Empty>{q ? 'No patient matches that search.' : 'No patients yet.'}</Empty>
       ) : (
+        <>
+        <SelectionBar kind="patients" sel={sel} shownIds={res.data.map((p) => p.id)} />
         <ul className="divide-y divide-line overflow-hidden rounded-xl border border-line bg-white">
           {res.data.map((p) => (
             <li key={p.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3 hover:bg-roha-50/60">
+              <RowCheck sel={sel} id={p.id} label={p.full_name} />
               <Link to={`/admin/patients/${p.id}`} className="min-w-48 flex-1 font-semibold text-roha-900 hover:underline">{p.full_name}</Link>
               <Phone e164={p.phone} />
               <span className="text-xs text-ink-soft">since {fmtDateTime(p.created_at)}</span>
@@ -56,6 +62,7 @@ export default function PatientsPage() {
             </li>
           ))}
         </ul>
+        </>
       )}
       {res.data?.length === 50 && <p className="mt-2 text-xs text-ink-soft">Showing the first 50 — refine the search to find others.</p>}
     </>

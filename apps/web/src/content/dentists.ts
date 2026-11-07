@@ -7,12 +7,17 @@ export type Dentist = {
   locations: Array<'addis-ababa' | 'gonder'>;
   services: string[];
   languages: string[];
+  /** Path under public/. */
   photo?: string;
+  /** True while `photo` is a stock stand-in, not the real dentist; the site tags it "Sample photo". */
+  photoIsSample?: boolean;
 };
 
 export const dentists: Dentist[] = [
   {
     slug: 'dr-selam-bekele',
+    photo: '/img/dentists/dr-selam-bekele.webp',
+    photoIsSample: true,
     name: 'Dr. Selam Bekele',
     title: 'General and cosmetic dentist',
     bio: 'Focuses on preventive care and whitening, and helps patients plan smile improvements one step at a time.',
@@ -22,6 +27,8 @@ export const dentists: Dentist[] = [
   },
   {
     slug: 'dr-dawit-alemu',
+    photo: '/img/dentists/dr-dawit-alemu.webp',
+    photoIsSample: true,
     name: 'Dr. Dawit Alemu',
     title: 'Endodontist and restorative dentist',
     bio: 'Treats painful and infected teeth with root canal therapy and restores them with crowns.',
@@ -31,6 +38,8 @@ export const dentists: Dentist[] = [
   },
   {
     slug: 'dr-meron-tadesse',
+    photo: '/img/dentists/dr-meron-tadesse.webp',
+    photoIsSample: true,
     name: 'Dr. Meron Tadesse',
     title: 'General dentist',
     bio: 'Looks after families in Gonder, from first cleanings to crowns and dentures.',
@@ -40,6 +49,8 @@ export const dentists: Dentist[] = [
   },
   {
     slug: 'dr-yonas-girma',
+    photo: '/img/dentists/dr-yonas-girma.webp',
+    photoIsSample: true,
     name: 'Dr. Yonas Girma',
     title: 'Orthodontist',
     bio: 'Plans and supervises braces and clear aligner treatment. Sees patients in Addis Ababa on Mondays to Wednesdays and in Gonder on Thursdays to Saturdays.',

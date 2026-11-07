@@ -1,0 +1,8 @@
+<!doctype html>
+<!-- Used only by scripts/render-deco.mjs to make the booking-band images. Not part of the site. -->
+<html><body style="margin:0;background:transparent">
+<script type="module">
+  import { renderStill } from '/scripts/decoScene.ts';
+  window.deco = { aligner: renderStill('aligner', 1040, 1040), tooth: renderStill('tooth', 880, 1040) };
+</script>
+</body></html>

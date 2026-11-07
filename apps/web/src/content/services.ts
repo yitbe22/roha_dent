@@ -12,11 +12,17 @@ export type Service = {
   aftercare: string[];
   faq: { q: string; a: string }[];
   related: string[];
+  /** Card and header photo (1200×800), under public/. */
+  image: string;
+  /** Describes what the photo shows (image search, screen readers). */
+  imageAlt: string;
 };
 
 export const services: Service[] = [
   {
     slug: 'scaling',
+    image: '/img/services/scaling.webp',
+    imageAlt: 'Dentist cleaning teeth with a scaler and mouth mirror',
     name: 'Scaling (Teeth Cleaning)',
     shortName: 'Teeth cleaning',
     summary: 'Removes hardened tartar and stains so your gums can heal and stay healthy.',
@@ -41,6 +47,8 @@ export const services: Service[] = [
   },
   {
     slug: 'teeth-whitening',
+    image: '/img/services/teeth-whitening.webp',
+    imageAlt: 'Close-up of a bright, white smile',
     name: 'Tooth Whitening',
     shortName: 'Whitening',
     summary: 'A supervised whitening treatment that lightens your teeth by several shades in one visit.',
@@ -65,6 +73,8 @@ export const services: Service[] = [
   },
   {
     slug: 'braces-invisible',
+    image: '/img/services/braces-invisible.webp',
+    imageAlt: 'Person fitting a clear aligner over their teeth',
     name: 'Braces (Invisible / Clear Aligners)',
     shortName: 'Braces and aligners',
     summary: 'Straighten crowded or gapped teeth with clear aligners or modern braces.',
@@ -89,6 +99,8 @@ export const services: Service[] = [
   },
   {
     slug: 'root-canal',
+    image: '/img/services/root-canal.webp',
+    imageAlt: 'Model of a tooth cut open to show the root canals',
     name: 'Root Canal Treatment',
     shortName: 'Root canal',
     summary: 'Treats infection inside the tooth, relieves pain and lets you keep your natural tooth.',
@@ -113,6 +125,8 @@ export const services: Service[] = [
   },
   {
     slug: 'emax-crown',
+    image: '/img/services/emax-crown.webp',
+    imageAlt: 'All-ceramic restoration being placed on a front tooth',
     name: 'E.max Crown',
     shortName: 'E.max crown',
     summary: 'An all-ceramic crown that is strong and looks very close to a natural tooth.',
@@ -137,6 +151,8 @@ export const services: Service[] = [
   },
   {
     slug: 'ceramic-crown',
+    image: '/img/services/ceramic-crown.webp',
+    imageAlt: 'Ceramic crown on a dental model',
     name: 'Ceramic Crown',
     shortName: 'Ceramic crown',
     summary: 'A durable, tooth-coloured crown that restores the shape and strength of a damaged tooth.',
@@ -157,6 +173,8 @@ export const services: Service[] = [
   },
   {
     slug: 'removable-denture',
+    image: '/img/services/removable-denture.webp',
+    imageAlt: 'Hand holding a removable partial denture',
     name: 'Removable Denture',
     shortName: 'Dentures',
     summary: 'Custom partial or full dentures that let you eat and smile with confidence again.',

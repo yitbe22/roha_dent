@@ -1,7 +1,7 @@
 // schema.org JSON-LD builders
 import { SITE, absoluteUrl } from '../content/site';
 import { locations, type Location } from '../content/locations';
-import type { Service } from '../content/services';
+import { services, type Service } from '../content/services';
 
 const DAY: Record<string, string> = {
   Mo: 'Monday', Tu: 'Tuesday', We: 'Wednesday', Th: 'Thursday', Fr: 'Friday', Sa: 'Saturday', Su: 'Sunday',
@@ -10,19 +10,47 @@ const DAY: Record<string, string> = {
 export const orgId = `${SITE.url}/#organization`;
 export const locationId = (l: Location) => `${absoluteUrl(`/locations/${l.slug}`)}#dentist`;
 
+export const websiteId = `${SITE.url}/#website`;
+
+/** Tells Google the site's name (shown above results) and who publishes it. */
+export function websiteLd() {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    '@id': websiteId,
+    name: SITE.name,
+    alternateName: SITE.shortName,
+    url: `${SITE.url}/`,
+    inLanguage: 'en',
+    publisher: { '@id': orgId },
+  };
+}
+
 export function organizationLd() {
   return {
     '@context': 'https://schema.org',
     '@type': 'MedicalOrganization',
     '@id': orgId,
     name: SITE.name,
+    alternateName: SITE.shortName,
     url: SITE.url,
-    logo: absoluteUrl('/favicon.svg'),
+    description: SITE.defaultDescription,
+    logo: { '@type': 'ImageObject', url: absoluteUrl(SITE.logo) },
+    image: absoluteUrl(SITE.ogImage),
     medicalSpecialty: 'Dentistry',
     telephone: locations[0].phoneE164,
+    areaServed: locations.map((l) => ({ '@type': 'City', name: l.city })),
     subOrganization: locations.map((l) => ({ '@id': locationId(l) })),
   };
 }
+
+/** A treatment as a schema.org MedicalProcedure (shared by the list and the detail page). */
+const procedure = (s: Service) => ({
+  '@type': 'MedicalProcedure',
+  name: s.name,
+  alternateName: s.shortName,
+  url: absoluteUrl(`/services/${s.slug}`),
+});
 
 export function dentistLd(l: Location) {
   return {
@@ -31,8 +59,13 @@ export function dentistLd(l: Location) {
     '@id': locationId(l),
     name: l.name,
     url: absoluteUrl(`/locations/${l.slug}`),
-    image: absoluteUrl(SITE.ogImage),
+    image: absoluteUrl(l.photo),
+    logo: absoluteUrl(SITE.logo),
+    description: l.intro,
     telephone: l.phoneE164,
+    medicalSpecialty: 'Dentistry',
+    isAcceptingNewPatients: true,
+    availableService: services.map(procedure),
     priceRange: '$$',
     parentOrganization: { '@id': orgId },
     address: {
@@ -57,11 +90,10 @@ export function dentistLd(l: Location) {
 export function serviceLd(s: Service) {
   return {
     '@context': 'https://schema.org',
-    '@type': 'MedicalProcedure',
-    name: s.name,
+    ...procedure(s),
     description: s.summary,
-    url: absoluteUrl(`/services/${s.slug}`),
-    procedureType: 'https://schema.org/NoninvasiveProcedure',
+    image: absoluteUrl(s.image),
+    bodyLocation: 'Teeth',
     howPerformed: s.visit.map((v) => v.title).join(', '),
     provider: { '@id': orgId },
   };
@@ -89,5 +121,15 @@ export function breadcrumbLd(trail: { name: string; path: string }[]) {
       name: t.name,
       item: absoluteUrl(t.path),
     })),
+  };
+}
+
+/** The treatment list, so search engines see every treatment page from /services. */
+export function servicesListLd() {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: 'Dental treatments at Roha Speciality Dental Center',
+    itemListElement: services.map((s, i) => ({ '@type': 'ListItem', position: i + 1, url: absoluteUrl(`/services/${s.slug}`), name: s.name })),
   };
 }

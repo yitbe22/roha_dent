@@ -33,7 +33,17 @@
     "treatments": "Treatments",
     "languages": "Speaks",
     "payAtClinic": "No payment online. You pay at the clinic.",
-    "placeholderNotice": "Placeholder profile"
+    "placeholderNotice": "Placeholder profile",
+    "samplePhoto": "Sample photo"
+  },
+  "beforeAfter": {
+    "heading": "Before and after",
+    "before": "Before",
+    "after": "After",
+    "slider": "Drag to compare before and after",
+    "beforeAlt": "Before: {{caption}}",
+    "afterAlt": "After: {{caption}}",
+    "illustrative": "Illustrative example: a stock photo and a digital simulation, not a Roha Dental patient. Results vary from person to person."
   },
   "footer": {
     "toTop": "Back to top",
@@ -131,7 +141,7 @@
       "confirmedTitle": "Your appointment is booked",
       "confirmedBody": "We have sent the details by SMS to {{phone}}.",
       "manage": "View, change or cancel",
-      "manageHint": "Keep this link. It is also in your SMS.",
+      "manageHint": "Keep this link. We also send it by SMS once your appointment is confirmed.",
       "another": "Book another appointment"
     },
     "notConfigured": "Online booking is not available right now. Please call or message the clinic.",

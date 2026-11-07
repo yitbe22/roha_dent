@@ -7,9 +7,11 @@ import { stagger } from '../lib/useReveal';
 import { getService } from '../content/services';
 import { dentists } from '../content/dentists';
 import { locations } from '../content/locations';
-import { PageIntro } from '../components/PageIntro';
+import { IntroPhoto, PageIntro } from '../components/PageIntro';
+import { BeforeAfter } from '../components/BeforeAfter';
+import { casesFor } from '../content/beforeAfter';
 import { CtaBand } from '../components/CtaBand';
-import { Monogram } from '../components/Monogram';
+import { DentistAvatar } from '../components/DentistAvatar';
 import NotFound from './NotFound';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -30,17 +32,21 @@ export default function ServiceDetail() {
   ];
   const team = dentists.filter((d) => d.services.includes(s.slug));
   const related = s.related.map(getService).filter((x) => !!x);
+  const cases = casesFor(s.slug);
   const cityOf = (slugs: string[]) => slugs.map((x) => locations.find((l) => l.slug === x)!.city).join(' and ');
 
   return (
     <>
       <Seo
-        title={`${s.name} in Addis Ababa & Gonder`}
-        description={`${s.summary} Book ${s.shortName.toLowerCase()} at Roha Speciality Dental Center in Addis Ababa or Gonder.`}
+        title={`${s.shortName} in Addis Ababa & Gonder`}
+        ogImage={s.image}
+        ogImageAlt={s.imageAlt}
+        description={`${s.summary} Book ${s.shortName.toLowerCase()} online at Roha Dental in Addis Ababa or Gonder.`}
         path={`/services/${s.slug}`}
         jsonLd={[serviceLd(s), breadcrumbLd(crumbs), faqLd(s.faq)]}
       />
-      <PageIntro crumbs={crumbs} title={s.name} lede={s.summary}>
+      <PageIntro crumbs={crumbs} title={s.name} lede={s.summary}
+        media={<IntroPhoto src={s.image} alt={s.imageAlt} width={1200} height={800} />}>
         <div className="mt-6 flex flex-wrap gap-2">
           <Badge variant="secondary"><Clock data-icon="inline-start" />{t('common.visitLength', { count: s.durationMinutes })}</Badge>
           <Badge variant="secondary"><Wallet data-icon="inline-start" />Price confirmed at your exam</Badge>
@@ -49,11 +55,18 @@ export default function ServiceDetail() {
 
       <div className="wrap mt-[clamp(2.5rem,5vw,4rem)] grid gap-14 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-20">
         <article className="flex max-w-[44rem] flex-col gap-[clamp(3rem,6vw,4.5rem)]">
-          <section data-reveal className="flex flex-col gap-5 text-lg leading-relaxed text-ink">
+          <section id="overview" data-reveal className="flex flex-col gap-5 text-lg leading-relaxed text-ink">
             {s.intro.map((p) => <p key={p}>{p}</p>)}
           </section>
 
-          <section aria-labelledby="good-for" data-reveal className="rounded-panel bg-page p-[clamp(1.5rem,4vw,2.5rem)]">
+          {cases.length > 0 && (
+            <section id="before-and-after" aria-labelledby="ba-h" data-reveal className="flex flex-col gap-6">
+              <h2 id="ba-h" className="text-[clamp(1.5rem,2.6vw,2rem)] leading-tight">{t('beforeAfter.heading')}</h2>
+              {cases.map((c) => <BeforeAfter key={c.slug} item={c} />)}
+            </section>
+          )}
+
+          <section id="when-it-helps" aria-labelledby="good-for" data-reveal className="rounded-panel bg-page p-[clamp(1.5rem,4vw,2.5rem)]">
             <h2 id="good-for" className="text-[clamp(1.5rem,2.6vw,2rem)] leading-tight">When it helps</h2>
             <ul className="mt-6 grid gap-x-8 gap-y-4 sm:grid-cols-2">
               {s.goodFor.map((g) => (
@@ -67,7 +80,7 @@ export default function ServiceDetail() {
             </ul>
           </section>
 
-          <section aria-labelledby="visit" data-reveal>
+          <section id="your-visit" aria-labelledby="visit" data-reveal>
             <h2 id="visit" className="text-[clamp(1.5rem,2.6vw,2rem)] leading-tight">What happens at your visit</h2>
             <ol className="mt-8 flex flex-col">
               {s.visit.map((v, i) => (
@@ -85,7 +98,7 @@ export default function ServiceDetail() {
             </ol>
           </section>
 
-          <section aria-labelledby="after" data-reveal>
+          <section id="aftercare" aria-labelledby="after" data-reveal>
             <h2 id="after" className="text-[clamp(1.5rem,2.6vw,2rem)] leading-tight">Afterwards</h2>
             <ul className="mt-6 flex flex-col">
               {s.aftercare.map((a) => (
@@ -95,7 +108,7 @@ export default function ServiceDetail() {
           </section>
 
           {s.faq.length > 0 && (
-            <section aria-labelledby="qa" data-reveal>
+            <section id="questions" aria-labelledby="qa" data-reveal>
               <h2 id="qa" className="text-[clamp(1.5rem,2.6vw,2rem)] leading-tight">Questions</h2>
               <Accordion type="single" collapsible className="mt-4">
                 {s.faq.map((f) => (
@@ -127,10 +140,10 @@ export default function ServiceDetail() {
                     <ul className="mt-3 flex flex-col gap-3">
                       {team.map((d) => (
                         <li key={d.slug} className="flex items-center gap-3">
-                          <Monogram name={d.name} className="size-10 text-sm" />
+                          <DentistAvatar dentist={d} tag={false} className="size-10 text-sm" />
                           <span className="leading-tight">
                             <span className="block font-medium text-ink">{d.name}</span>
-                            <span className="text-sm">{cityOf(d.locations)}</span>
+                            <span className="text-sm">{cityOf(d.locations)}{d.photoIsSample && ` · ${t('common.samplePhoto')}`}</span>
                           </span>
                         </li>
                       ))}
@@ -145,7 +158,7 @@ export default function ServiceDetail() {
       </div>
 
       {related.length > 0 && (
-        <section aria-labelledby="related-h" className="wrap mt-[clamp(4rem,9vw,7.5rem)]">
+        <section id="related-treatments" aria-labelledby="related-h" className="wrap mt-[clamp(4rem,9vw,7.5rem)]">
           <h2 id="related-h" data-reveal className="text-h2">Often booked with</h2>
           <ul className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {related.map((r, i) => (

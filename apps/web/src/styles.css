@@ -296,3 +296,11 @@
   0%, 100% { transform: translateY(0) rotate(-1.5deg); }
   50% { transform: translateY(-10px) rotate(1.5deg); }
 }
+
+/* Booking band: the 3D aligner and tooth bob gently once they have glided in (lib/scrollFx useGlideIn) */
+@keyframes deco-bob {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-12px) rotate(2deg); }
+}
+.deco-bob { animation: deco-bob 6s ease-in-out infinite; }
+.deco-bob-late { animation-delay: -3s; }

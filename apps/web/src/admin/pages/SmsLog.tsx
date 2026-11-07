@@ -7,6 +7,7 @@ import { errorMessage, useLookups } from '../data';
 import { SMS_ERROR_HELP, SMS_TYPES, SMS_TYPE_LABEL, smsState, type SmsRow, type SmsStatus, type SmsType } from '../types';
 import { Empty, ErrorBox, Loading, PageHeader, SMS_PROBLEM, SmsBadge, Tip, btn, fmtDateTime, inputInline, useConfirm, useOpenAppointment, useToast } from '../ui';
 import { ScopeSelect } from './common';
+import { ClearHistoryButton, RowCheck, SelectionBar, useSelection } from './ClearHistory';
 
 const GROUPS: Record<string, { label: string; statuses?: SmsStatus[] }> = {
   all: { label: 'All messages' },
@@ -22,6 +23,7 @@ export default function SmsLogPage() {
   const toast = useToast();
   const ask = useConfirm();
   const qc = useQueryClient();
+  const sel = useSelection();
   const open = useOpenAppointment();
   const [group, setGroup] = useState('all');
   const [type, setType] = useState<SmsType | ''>('');
@@ -73,7 +75,7 @@ export default function SmsLogPage() {
 
   return (
     <>
-      <PageHeader title="Text messages" subtitle="Every SMS the system sends to patients and to the clinic. They go out automatically." actions={<ScopeSelect />} />
+      <PageHeader title="Text messages" subtitle="Every SMS the system sends to patients and to the clinic. They go out automatically." actions={<><ScopeSelect /><ClearHistoryButton kind="sms" /></>} />
 
       {stats.data && (
         <div className="mb-5 grid gap-3 sm:grid-cols-3">
@@ -111,12 +113,15 @@ export default function SmsLogPage() {
       ) : q.data.length === 0 ? (
         <Empty icon="message">{group === 'problems' ? 'No problems — every message went through.' : 'No messages here yet.'}</Empty>
       ) : (
+        <>
+        <SelectionBar kind="sms" sel={sel} shownIds={q.data.filter((m) => m.status !== 'queued' && m.status !== 'sending').map((m) => m.id)} />
         <ul className="space-y-2">
           {q.data.map((m) => {
             const st = smsState(m.status);
             return (
               <li key={m.id} className={`rounded-xl border bg-white px-4 py-3 ${st.tone === 'bad' ? 'border-red-200' : 'border-line'}`}>
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                  {m.status !== 'queued' && m.status !== 'sending' && <RowCheck sel={sel} id={m.id} label={`message to ${formatEthiopianPhone(m.to_phone)}`} />}
                   <span className="font-semibold">{SMS_TYPE_LABEL[m.type]}{m.resend_of ? ' (sent again)' : ''}</span>
                   <SmsBadge status={m.status} />
                   <span className="text-ink-soft">to <span className="tabular-nums">{formatEthiopianPhone(m.to_phone)}</span></span>
@@ -145,6 +150,7 @@ export default function SmsLogPage() {
             );
           })}
         </ul>
+        </>
       )}
       {q.data?.length === limit && (
         <button type="button" className={`${btn.ghost} mt-3`} onClick={() => setLimit((l) => l + PAGE)}>Show older messages</button>

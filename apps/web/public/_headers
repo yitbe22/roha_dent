@@ -9,6 +9,10 @@
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
 
+# Not content-hashed (they live in public/), so cache for a day rather than forever.
+/img/*
+  Cache-Control: public, max-age=86400
+
 /app.html
   X-Robots-Tag: noindex
 

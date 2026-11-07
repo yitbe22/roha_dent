@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Clock, MapPin, Phone } from 'lucide-react';
 import type { Location } from '../content/locations';
 import { Icon } from './Icon';
+import { srcSet } from '../lib/img';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -11,7 +12,11 @@ export function LocationPanel({ location: l, headingLevel = 'h3' }: { location: 
   const { t } = useTranslation();
   const H = headingLevel;
   return (
-    <Card className="h-full">
+    <Card className="h-full overflow-hidden pt-0">
+      <Link to={`/locations/${l.slug}`} tabIndex={-1} aria-hidden="true" className="block overflow-hidden">
+        <img src={l.photo} srcSet={srcSet(l.photo, 1600)} sizes="(min-width: 768px) 50vw, 100vw" alt="" width={1600} height={1000} loading="lazy" decoding="async"
+          className="aspect-[16/9] w-full object-cover transition-transform duration-700 ease-out-soft hover:scale-[1.03]" />
+      </Link>
       <CardHeader>
         <CardTitle>
           <H className="text-[1.625rem] leading-tight">{l.city}</H>

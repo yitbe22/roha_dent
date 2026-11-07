@@ -113,7 +113,7 @@ export const SOURCE_LABEL: Record<AppointmentSource, string> = {
   online: 'Website', phone: 'Phone call', walk_in: 'Walk-in', admin: 'Staff',
 };
 export const SMS_TYPE_LABEL: Record<SmsType, string> = {
-  booking_received: 'Request received',
+  booking_received: 'Request received (no longer sent)',
   booking_confirmed: 'Booking confirmed',
   booking_cancelled: 'Booking cancelled',
   booking_rescheduled: 'New time',
@@ -121,7 +121,9 @@ export const SMS_TYPE_LABEL: Record<SmsType, string> = {
   reminder_2h: 'Reminder (2 hours before)',
   clinic_new_booking: 'Alert to clinic',
 };
-export const SMS_TYPES = Object.keys(SMS_TYPE_LABEL) as SmsType[];
+/** Kinds that are still sent (filter options). Older kinds only appear on old log rows. */
+const RETIRED: SmsType[] = ['booking_received', 'reminder_24h', 'reminder_2h'];
+export const SMS_TYPES = (Object.keys(SMS_TYPE_LABEL) as SmsType[]).filter((t) => !RETIRED.includes(t));
 export const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 /** SMS delivery state in plain words, with what staff should do about it. */

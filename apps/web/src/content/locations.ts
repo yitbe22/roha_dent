@@ -14,6 +14,9 @@ export type Location = {
   directions: string;
   mapUrl: string;
   geo: { lat: number; lng: number };
+  /** Clinic photo (1600×1000), under public/. Stock stand-in until real photos arrive. */
+  photo: string;
+  photoAlt: string;
   hours: OpeningHours[];
   hoursText: string[];
   intro: string;
@@ -24,6 +27,8 @@ const MON_SAT: OpeningHours['days'] = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 export const locations: Location[] = [
   {
     slug: 'addis-ababa',
+    photo: '/img/branches/addis-ababa.webp',
+    photoAlt: 'Dental treatment chair in a bright clinic room',
     city: 'Addis Ababa',
     name: 'Roha Speciality Dental Center, Addis Ababa',
     phoneDisplay: '+251 94 604 0506',
@@ -40,6 +45,8 @@ export const locations: Location[] = [
   },
   {
     slug: 'gonder',
+    photo: '/img/branches/gonder.webp',
+    photoAlt: 'Dental clinic room with treatment chairs and equipment',
     city: 'Gonder',
     name: 'Roha Speciality Dental Center, Gonder',
     phoneDisplay: '+251 92 364 5456',

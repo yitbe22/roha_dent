@@ -4,6 +4,7 @@ import { supabase } from '../supabase';
 import { errorMessage, useLookups } from '../data';
 import type { AuditRow } from '../types';
 import { Empty, ErrorBox, Loading, PageHeader, btn, fmtDateTime, inputInline, useOpenAppointment } from '../ui';
+import { CLEARED_LABEL, ClearHistoryButton, RowCheck, SelectionBar, useSelection } from './ClearHistory';
 
 const ENTITIES = ['appointments', 'profiles', 'settings', 'sms_templates'];
 const HIDE = new Set(['id', 'created_at', 'updated_at', 'created_by', 'updated_by', 'patient_id', 'location_id']);
@@ -13,6 +14,7 @@ export default function ActivityPage() {
   const open = useOpenAppointment();
   const [entity, setEntity] = useState('');
   const [limit, setLimit] = useState(100);
+  const sel = useSelection();
 
   const people = useQuery({
     queryKey: ['profile-names'],
@@ -57,10 +59,13 @@ export default function ActivityPage() {
     <>
       <PageHeader title="Activity" subtitle="Who changed what — bookings, staff accounts, settings and SMS templates."
         actions={
-          <select className={`${inputInline} w-auto`} value={entity} onChange={(e) => setEntity(e.target.value)} aria-label="Filter">
-            <option value="">Everything</option>
-            {ENTITIES.map((e) => <option key={e} value={e}>{e.replace('_', ' ')}</option>)}
-          </select>
+          <>
+            <select className={`${inputInline} w-auto`} value={entity} onChange={(e) => setEntity(e.target.value)} aria-label="Filter">
+              <option value="">Everything</option>
+              {ENTITIES.map((e) => <option key={e} value={e}>{e.replace('_', ' ')}</option>)}
+            </select>
+            <ClearHistoryButton kind="activity" />
+          </>
         } />
       {q.isError ? (
         <ErrorBox error={errorMessage(q.error)} onRetry={() => q.refetch()} />
@@ -69,15 +74,22 @@ export default function ActivityPage() {
       ) : q.data.length === 0 ? (
         <Empty>No activity yet.</Empty>
       ) : (
+        <>
+        <SelectionBar kind="activity" sel={sel} shownIds={q.data.map((r) => String(r.id))} />
         <ul className="divide-y divide-line overflow-hidden rounded-xl border border-line bg-white text-sm">
           {q.data.map((r) => (
-            <li key={r.id} className="flex flex-wrap gap-x-3 gap-y-1 px-4 py-2.5">
+            <li key={r.id} className="flex flex-wrap items-start gap-x-3 gap-y-1 px-4 py-2.5">
+              <RowCheck sel={sel} id={String(r.id)} label={`entry from ${fmtDateTime(r.created_at)}`} />
               <span className="w-28 shrink-0 tabular-nums text-ink-soft">{fmtDateTime(r.created_at)}</span>
               <span className="w-36 shrink-0 font-semibold">
                 {r.actor_id ? people.data?.get(r.actor_id) ?? 'Staff' : r.actor_type === 'patient' ? 'Patient (link)' : 'System / online'}
               </span>
               <span className="min-w-0 flex-1">
-                <span className="font-medium">{r.entity.replace('_', ' ')} · {r.action.replace('status:', 'status → ')}</span>
+                <span className="font-medium">
+                  {r.action === 'clear_history' || r.action === 'delete_selected'
+                    ? `${r.action === 'clear_history' ? 'Cleared all' : 'Deleted selected'} ${CLEARED_LABEL[r.entity] ?? r.entity}`
+                    : `${r.entity.replace('_', ' ')} · ${r.action.replace('status:', 'status → ')}`}
+                </span>
                 {r.entity === 'appointments' && r.entity_id && (
                   <button type="button" className="link ml-2 text-xs" onClick={() => open(r.entity_id!)}>open</button>
                 )}
@@ -86,6 +98,7 @@ export default function ActivityPage() {
             </li>
           ))}
         </ul>
+        </>
       )}
       {q.data?.length === limit && <button type="button" className={`${btn.ghost} mt-3`} onClick={() => setLimit((l) => l + 100)}>Load more</button>}
     </>

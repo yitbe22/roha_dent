@@ -93,7 +93,6 @@ export const WORST_CASE_VARS: Record<TemplateVar, string> = {
  * characters): no Amharic letters, curly quotes or dashes, and a short manage link.
  */
 export const DEFAULT_TEMPLATES: Record<string, string> = {
-  booking_received: "Roha Dental {location}: Hi {patient_name}, we got your request for {date} {time}. We'll SMS to confirm. Change: {manage_link}",
   booking_confirmed: 'Roha Dental {location}: {patient_name}, confirmed: {service}, {date} {time}. Change/cancel: {manage_link}',
   booking_cancelled: 'Roha Dental: your appointment {date} {time} is cancelled. To book again call {location_phone} or rohadent.com/book',
   booking_rescheduled: 'Roha Dental {location}: your appointment is moved to {date} {time}. Details: {manage_link}',
