@@ -153,7 +153,7 @@ export default function BookingWizard() {
         form.setError('fullName', { message: 'nameInvalid' });
         return;
       }
-      const known = ['TOO_MANY_ACTIVE_BOOKINGS', 'RATE_LIMITED', 'TURNSTILE_FAILED', 'INVALID_PHONE', 'UNSUPPORTED_NETWORK', 'NETWORK'];
+      const known = ['TOO_MANY_ACTIVE_BOOKINGS', 'PATIENT_TIME_CONFLICT', 'RATE_LIMITED', 'TURNSTILE_FAILED', 'INVALID_PHONE', 'UNSUPPORTED_NETWORK', 'NETWORK'];
       setSubmitError(t(known.includes(code) ? `booking.errors.${code}` : 'booking.errors.generic'));
     },
   });

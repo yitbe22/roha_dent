@@ -125,6 +125,7 @@
       "captcha": "Complete the security check, then try again.",
       "SLOT_UNAVAILABLE": "Someone booked that time a moment ago. Please choose another time.",
       "TOO_MANY_ACTIVE_BOOKINGS": "This number already has the maximum number of upcoming appointments. Call the clinic to book more.",
+      "PATIENT_TIME_CONFLICT": "You already have an appointment at this time. Please choose another time. To book for a family member at the same time, call the clinic.",
       "RATE_LIMITED": "Too many booking attempts. Please wait a while, or call the clinic.",
       "TURNSTILE_FAILED": "The security check failed. Please try again.",
       "INVALID_PHONE": "Enter a valid Ethiopian mobile number, for example 0911 234 567.",

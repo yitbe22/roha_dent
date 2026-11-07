@@ -96,6 +96,7 @@ const BUSINESS: Record<string, string> = {
   INVALID_DENTIST: 'That dentist is not active.',
   INVALID_TIME: 'The end time must be after the start time.',
   TOO_MANY_ACTIVE_BOOKINGS: 'This patient already has the maximum number of upcoming bookings.',
+  PATIENT_TIME_CONFLICT: 'This phone number already has an appointment at that time.',
   FORBIDDEN: 'You don’t have permission to do that.',
   EMAIL_TAKEN: 'An account with that email already exists.',
   LOCATION_REQUIRED: 'Staff accounts need a clinic.',

@@ -40,7 +40,7 @@ export type ManageRequest = z.infer<typeof manageRequestSchema>;
 /** Stable error codes returned by the Edge Functions (mapped to UI text in the web app). */
 export const API_ERROR_CODES = [
   'VALIDATION', 'INVALID_JSON', 'METHOD_NOT_ALLOWED', 'INVALID_PHONE', 'UNSUPPORTED_NETWORK', 'INVALID_NAME',
-  'INVALID_NOTES', 'RATE_LIMITED', 'TURNSTILE_FAILED', 'SLOT_UNAVAILABLE', 'TOO_MANY_ACTIVE_BOOKINGS',
+  'INVALID_NOTES', 'RATE_LIMITED', 'TURNSTILE_FAILED', 'SLOT_UNAVAILABLE', 'TOO_MANY_ACTIVE_BOOKINGS', 'PATIENT_TIME_CONFLICT',
   'NOT_FOUND', 'CANNOT_CANCEL', 'CANNOT_RESCHEDULE', 'SERVER_ERROR',
 ] as const;
 export type ApiErrorCode = (typeof API_ERROR_CODES)[number];

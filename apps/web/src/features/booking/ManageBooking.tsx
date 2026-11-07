@@ -52,7 +52,7 @@ export default function ManageBooking() {
     } else if (code === 'CANNOT_CANCEL' || code === 'CANNOT_RESCHEDULE') {
       setError(t('manage.cannot', { phone }));
       void appt.refetch();
-    } else if (code === 'RATE_LIMITED' || code === 'NETWORK') {
+    } else if (code === 'RATE_LIMITED' || code === 'NETWORK' || code === 'PATIENT_TIME_CONFLICT') {
       setError(t(`booking.errors.${code}`));
     } else {
       setError(t('booking.errors.generic'));

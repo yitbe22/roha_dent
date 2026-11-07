@@ -64,6 +64,7 @@ const DB_ERRORS: Partial<Record<string, { status: number; code: ApiErrorCode }>>
   INVALID_NOTES: { status: 400, code: 'INVALID_NOTES' },
   SLOT_UNAVAILABLE: { status: 409, code: 'SLOT_UNAVAILABLE' },
   TOO_MANY_ACTIVE_BOOKINGS: { status: 409, code: 'TOO_MANY_ACTIVE_BOOKINGS' },
+  PATIENT_TIME_CONFLICT: { status: 409, code: 'PATIENT_TIME_CONFLICT' },
   NOT_FOUND: { status: 404, code: 'NOT_FOUND' },
   CANNOT_CANCEL: { status: 409, code: 'CANNOT_CANCEL' },
   CANNOT_RESCHEDULE: { status: 409, code: 'CANNOT_RESCHEDULE' },
