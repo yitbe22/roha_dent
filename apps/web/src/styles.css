@@ -55,6 +55,7 @@
   --radius-panel: 22px;
 
   --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
 
   /* Type scale — display sizes follow the reference; body 16px */
   --text-base: 1rem;
@@ -210,6 +211,8 @@
 /* During the intro the hero skips its scroll-reveal; the intro animates it instead */
 .hero-intro .hero [data-reveal]:not([data-intro]) { opacity: 1; transform: none; filter: none; transition: none; }
 .hero [data-intro]:not([data-intro='fade']):not([data-intro='tooth']) { display: inline-block; }
+/* Coming back to the home page (playHeroEntrance): only the hero replays; the header stays put */
+.hero-quick .site-header [data-intro] { opacity: 1; filter: none; transform: none; animation: none; }
 @keyframes w-in { to { opacity: 1; filter: blur(0); transform: none; } }
 
 /* Hero name marquee: huge pale type sliding left forever, faded at both edges */
@@ -253,6 +256,38 @@ html.lenis, html.lenis body { height: auto; }
    stay hidden so nothing flashes; if the app never starts, the fallback shows them after 3 s. */
 .js-reveal:not(.reveal-ready) [data-reveal] { opacity: 0; animation: reveal-fallback 0s 3s forwards; }
 @keyframes reveal-fallback { to { opacity: 1; } }
+
+/* ---------- Page transition + entrance (after the Habesha storefront) ----------
+   usePageTransition (App.tsx): the old page fades out, the window returns to the top, the new
+   page fades in. Opacity only, so a treatment photo flying in lands on a header that holds still. */
+html[data-page='out'] #main { opacity: 0; transition: opacity 0.2s var(--ease-out-soft); pointer-events: none; }
+html[data-page='in'] #main { animation: page-in 0.55s var(--ease-out-soft) both; }
+@keyframes page-in { from { opacity: 0; } }
+
+/* Entrance (PageIntro), played as each page opens; on the first visit it waits for the intro
+   screen to clear (--t0). Reduced motion drops the animations, leaving everything in place.
+   - [data-enter]: rises out of a soft blur, delayed by --d
+   - .enter-word: the title rises word by word out of its masks
+   - .enter-image: the photo wipes open from the bottom while it settles from a slight zoom */
+:root { --enter-at: 0.05s; }
+.hero-intro { --enter-at: var(--t0, 2.15s); }
+.word-mask { display: inline-block; overflow: hidden; padding-bottom: 0.08em; margin-bottom: -0.08em; vertical-align: bottom; }
+[data-enter] { animation: enter-rise 0.9s var(--ease-out-soft) both; animation-delay: calc(var(--enter-at) + var(--d, 0s)); }
+@keyframes enter-rise { from { opacity: 0; transform: translateY(28px); filter: blur(8px); } }
+.enter-word { display: inline-block; animation: enter-word 1s var(--ease-expo) both; animation-delay: calc(var(--enter-at) + 0.05s + var(--i, 0) * 60ms); }
+@keyframes enter-word { from { transform: translateY(110%); } }
+.enter-image { overflow: hidden; animation: enter-clip 1.2s var(--ease-expo) both; animation-delay: calc(var(--enter-at) + var(--d, 0s)); }
+@keyframes enter-clip { from { clip-path: inset(100% 0 0 0); } to { clip-path: inset(0); } }
+.enter-zoom { animation: enter-zoom 1.6s var(--ease-expo) both; animation-delay: calc(var(--enter-at) + var(--d, 0s)); }
+@keyframes enter-zoom { from { transform: scale(1.15); } }
+
+/* Treatment-page arrival (PageIntro `arrive`, after the Habesha product page): the title slides
+   out of its masks sideways while the lede and badges rise in turn, timed against the card photo
+   flying into the header photo (lib/photoFlight.ts). */
+.arrive-word { display: inline-block; animation: arrive-word 0.9s var(--ease-expo) both; animation-delay: calc(var(--enter-at) + 0.3s + var(--i, 0) * 0.07s); }
+@keyframes arrive-word { from { transform: translateX(105%); } }
+[data-arrive] { animation: arrive-rise 0.6s var(--ease-out-soft) both; animation-delay: calc(var(--enter-at) + 0.45s + var(--i, 0) * 0.06s); }
+@keyframes arrive-rise { from { opacity: 0; transform: translateY(18px); } }
 /* ---------- shadcn/ui tokens, mapped onto the Roha palette (light only) ---------- */
 @theme inline {
   --font-heading: var(--font-display);

@@ -5,6 +5,7 @@ import { services } from '../content/services';
 import { stagger } from '../lib/useReveal';
 import { Badge } from '@/components/ui/badge';
 import { srcSet } from '../lib/img';
+import { preloadLarge, startFlight } from '../lib/photoFlight';
 
 /**
  * Every treatment as a plain card that opens its page; the last card is the
@@ -19,9 +20,15 @@ export function TreatmentGrid({ headingLevel = 'h3' }: { headingLevel?: 'h2' | '
         <li key={s.slug} data-reveal style={stagger(i % 4)} className="grid">
           <Link
             to={`/services/${s.slug}`}
+            // the photo lifts off and flies into the treatment page's header photo
+            onClick={(e) => {
+              if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+              startFlight(s.slug, e.currentTarget.querySelector('[data-flight-frame]'));
+            }}
+            onPointerEnter={(e) => preloadLarge(e.currentTarget.querySelector('img'))}
             className="group relative flex min-h-60 flex-col overflow-hidden rounded-card bg-white ring-1 ring-line transition-[box-shadow,transform] duration-300 ease-out-soft hover:-translate-y-1 hover:shadow-[0_18px_40px_-24px_rgb(15_35_80/0.45)] hover:ring-roha-300 focus-visible:ring-2 focus-visible:ring-ring"
           >
-            <span className="block overflow-hidden" aria-hidden="true">
+            <span data-flight-frame className="block overflow-hidden" aria-hidden="true">
               <img src={s.image} srcSet={srcSet(s.image, 1200)} sizes="(min-width: 1024px) 18rem, (min-width: 640px) 50vw, 100vw"
                 alt="" width={1200} height={800} loading="lazy" decoding="async"
                 className="aspect-[3/2] w-full object-cover transition-transform duration-700 ease-out-soft group-hover:scale-[1.04]" />

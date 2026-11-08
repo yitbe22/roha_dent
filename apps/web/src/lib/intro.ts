@@ -17,7 +17,7 @@ function scheduleIntroEnd(ms: number) {
   window.clearTimeout(clearTimer);
   clearTimer = window.setTimeout(() => {
     const root = document.documentElement;
-    root.classList.remove('hero-intro');
+    root.classList.remove('hero-intro', 'hero-quick');
     root.style.removeProperty('--t0');
   }, ms);
 }
@@ -52,10 +52,25 @@ export function playIntro(swap: () => void) {
     swap();
     jumpToTop();
     root.style.setProperty('--t0', REPLAY_T0);
+    root.classList.remove('hero-quick');
     root.classList.remove('hero-intro');
     void root.offsetWidth;
     root.classList.add('hero-intro');
     window.dispatchEvent(new Event('roha:intro'));
     scheduleIntroEnd(1150 + 2000);
   }, 60);
+}
+
+/**
+ * Arriving on the home page from another page (no intro screen): replay the hero entrance at once,
+ * so the headline rises word by word like every other page's title. Call before the page paints.
+ */
+export function playHeroEntrance() {
+  if (reduced()) return;
+  const root = document.documentElement;
+  root.style.setProperty('--t0', '0.1s');
+  root.classList.remove('hero-intro');
+  void root.offsetWidth; // restart the CSS animations
+  root.classList.add('hero-intro', 'hero-quick');
+  scheduleIntroEnd(100 + 2000);
 }

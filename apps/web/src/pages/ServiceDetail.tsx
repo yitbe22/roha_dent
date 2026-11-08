@@ -1,3 +1,4 @@
+import { Fragment } from 'react';
 import { Link, useParams } from 'react-router';
 import { useTranslation } from 'react-i18next';
 import { ArrowUpRight, CalendarDays, Check, Clock, Wallet } from 'lucide-react';
@@ -35,8 +36,9 @@ export default function ServiceDetail() {
   const cases = casesFor(s.slug);
   const cityOf = (slugs: string[]) => slugs.map((x) => locations.find((l) => l.slug === x)!.city).join(' and ');
 
+  // keyed so the arrival replays when moving from one treatment to another
   return (
-    <>
+    <Fragment key={s.slug}>
       <Seo
         title={`${s.shortName} in Addis Ababa & Gonder`}
         ogImage={s.image}
@@ -45,8 +47,8 @@ export default function ServiceDetail() {
         path={`/services/${s.slug}`}
         jsonLd={[serviceLd(s), breadcrumbLd(crumbs), faqLd(s.faq)]}
       />
-      <PageIntro crumbs={crumbs} title={s.name} lede={s.summary}
-        media={<IntroPhoto src={s.image} alt={s.imageAlt} width={1200} height={800} />}>
+      <PageIntro crumbs={crumbs} title={s.name} lede={s.summary} arrive
+        media={<IntroPhoto src={s.image} alt={s.imageAlt} width={1200} height={800} flight={s.slug} />}>
         <div className="mt-6 flex flex-wrap gap-2">
           <Badge variant="secondary"><Clock data-icon="inline-start" />{t('common.visitLength', { count: s.durationMinutes })}</Badge>
           <Badge variant="secondary"><Wallet data-icon="inline-start" />Price confirmed at your exam</Badge>
@@ -180,6 +182,6 @@ export default function ServiceDetail() {
       )}
 
       <CtaBand bookTo={`/book?service=${s.slug}`} />
-    </>
+    </Fragment>
   );
 }
